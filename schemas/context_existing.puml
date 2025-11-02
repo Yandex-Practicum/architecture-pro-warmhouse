@@ -1,0 +1,22 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(client, "Client", "Пользователь системы «Тёплый дом»")
+Person(integrationSpecialist, "Специалист по подключению", "Каждая установка сопровождается выездом специалиста по подключению системы отопления в доме к текущей версии системы")
+
+System_Ext(smartDevices ,"SmartDevices", "Внешние устройства в домах пользователей")
+
+System_Boundary(system, "WarmHouse System") {
+    System(warmHouse, "warmHouse", "Монолитное приложение WarmHouse System")
+}
+note right of warmHouse : **МОНОЛИТ:**\n\n- Язык программирования: Go\n- База данных: PostgreSQL\n- Архитектура: Монолитная, все компоненты системы (обработка запросов, бизнес-логика, работа с данными) находятся в рамках одного приложения.\n- Взаимодействие: Синхронное, запросы обрабатываются последовательно.\n- Масштабируемость: Ограничена, так как монолит сложно масштабировать по частям.\n- Развертывание: Требует остановки всего приложения.
+
+Rel(client, warmHouse, "Управляет отоплением", "Web")
+Rel(client, warmHouse, "Просматривает температуру", "Web")
+
+Rel(warmHouse, smartDevices, "Fetch User Category", "Https")
+
+Rel(integrationSpecialist, smartDevices, "Устанавливает устройства", "Физически")
+Rel(integrationSpecialist, warmHouse, "Прописывает устройства на сервере", "SQL?")
+
+@enduml
