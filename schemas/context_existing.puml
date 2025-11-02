@@ -14,7 +14,7 @@ note right of warmHouse : **МОНОЛИТ:**\n\n- Язык программир
 Rel(client, warmHouse, "Управляет отоплением", "Web")
 Rel(client, warmHouse, "Просматривает температуру", "Web")
 
-Rel(warmHouse, smartDevices, "Fetch User Category", "Https")
+Rel(warmHouse, smartDevices, "Управляем внешними устройствами в домах пользователей", "Https")
 
 Rel(integrationSpecialist, smartDevices, "Устанавливает устройства", "Физически")
 Rel(integrationSpecialist, warmHouse, "Прописывает устройства на сервере", "SQL?")
