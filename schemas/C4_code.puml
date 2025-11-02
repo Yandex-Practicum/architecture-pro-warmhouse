@@ -1,0 +1,30 @@
+@startuml
+
+class User {
+  +int id
+  +String name
+  +String email
+
+  +void register()
+  +void login()
+}
+
+class Device {
+  +int id
+  +int userId
+  +String name
+  +String type
+  +String model
+  +String status
+  +Timestamp createdAt
+
+  +void create()
+  +void update()
+  +void activate()
+  +void deactivate()
+  +void delete()
+}
+
+User "1" -- "0..*" Device : has
+
+@enduml

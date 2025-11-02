@@ -1,0 +1,45 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(smartHomeSystem, "SmartHome System") {
+    Container(apiGW, "API GateWay", "Java/NodeJs", "Вэб-вервисы для пользователей и мобильных приложений")
+    Container(userService, "User Service", "Java|Go", "Сервис управления пользователями")
+    Container(telemetryService, "Telemetry Service", "Go|Python", "Сервис взаимодействия с устройствами для получения телеметрии")
+    Container(deviceService, "Device Service", "Java|Go", "Сервис управления устройствами") {
+
+        Component(deviceAuthorizer, "Device Authorizer", "Привязка устройств к пользователям и проверка прав")
+        ComponentDb(deviceRepository, "Device Repository", "Инкапсуляция взаимодействия с БД")
+        Component(deviceAPI, "Device API", "API контроллер")
+        Component(deviceController, "Device Controller", "Логика управления устройствами в домах пользователей")
+
+        ComponentQueue(commandPublisher, "Command Publisher")
+        ComponentQueue(eventConsumer, "Device Events Consumer")
+        Component(eventProcessor, "Device Events Processor", "Обрабатывает события от устройств")
+    }
+    ContainerDb(deviceDatabase, "Device Database", "PostgreSQL", "БД устройств")
+}
+
+Component_Ext(smartDevices ,"SmartDevices", "Внешние устройства в домах пользователей")
+
+Rel(deviceRepository, deviceDatabase, "Чтение/запись", "SQL")
+
+Rel(telemetryService, deviceAPI, "Получает метаинформацию об устройствах", "REST")
+
+Rel(apiGW, deviceAPI, "CRUD устройств", "REST")
+
+Rel(deviceAPI, deviceRepository, "CRUD устройств")
+Rel(deviceController, deviceRepository, "CRUD устройств")
+Rel(deviceAPI, deviceController, "Управляющие запросы устройств")
+
+Rel(deviceAPI, deviceAuthorizer, "Привязка устройства к пользователю", "REST")
+Rel(deviceAuthorizer, userService, "Привязка устройства к пользователю", "REST")
+
+Rel(eventConsumer, eventProcessor, "События start|stop от устройств")
+Rel(eventProcessor, deviceAuthorizer, "Авторизация устройств")
+Rel(eventProcessor, deviceRepository, "Включение/отключение устройств")
+
+Rel(deviceController, commandPublisher, "Управляющие команды для устройств")
+Rel(commandPublisher, smartDevices, "Управляющие команды для устройств", "MQ")
+Rel(smartDevices, eventConsumer, "Сообщения start|stop от внешних устройств")
+
+@enduml

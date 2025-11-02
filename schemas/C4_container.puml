@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(client, "Client", "Пользователь системы «Тёплый дом»")
+Person(operator, "Operator", "Оператор поддержки. Подключает новых пользователей")
+
+Container_Boundary(smartHomeSystem, "SmartHome System") {
+    Container(apiGW, "API GateWay", "Java/NodeJs", "Вэб-вервисы для пользователей и мобильных приложений")
+    Container(userService, "User Service", "Java|Go", "Сервис управления пользователями")
+    ContainerDb(userDatabase, "User Database", "PostgreSQL", "БД пользователей")
+    Container(deviceService, "Device Service", "Java|Go", "Сервис управления устройствами")
+    ContainerDb(deviceDatabase, "Device Database", "PostgreSQL", "БД устройств")
+    Container(telemetryService, "Telemetry Service", "Go|Python", "Сервис взаимодействия с устройствами для получения телеметрии")
+    ContainerDb(telemetryDatabase, "Telemetry Database", "PostgreSQL", "БД с данными телеметрии")
+}
+
+SystemQueue_Ext(smartDevices ,"SmartDevices", "Внешние устройства в домах пользователей")
+
+Rel(userService, userDatabase, "Чтение/запись" ,"SQL")
+Rel(deviceService, deviceDatabase, "Чтение/запись", "SQL")
+Rel(telemetryService, telemetryDatabase, "Чтение/запись", "SQL")
+
+Rel(telemetryService, deviceService, "Получает метаинформацию об устройствах", "REST")
+Rel(deviceService, userService, "Привязка устройства к пользователю", "REST")
+
+Rel(client, apiGW, "Отслеживание и управление устройствами", "HTTPS")
+Rel(operator, apiGW, "Управление устройствами", "HTTPS")
+
+Rel(apiGW, userService, "CRUD пользователей + Аутентификация", "REST")
+Rel(apiGW, deviceService, "CRUD устройств", "REST")
+Rel(apiGW, telemetryService, "Получение метрик", "REST")
+
+Rel(deviceService, smartDevices, "Управляющие команды для устройств", "MQ")
+Rel(smartDevices, telemetryService, "Отправка метрик с устройств","MQ")
+
+@enduml
