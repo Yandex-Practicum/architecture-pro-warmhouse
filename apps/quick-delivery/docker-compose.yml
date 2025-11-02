@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/orders
+    depends_on:
+      - db
+
+  logistics-service:
+    build: ./logistics-service
+    container_name: logistics-service
+    ports:
+      - "5001:5001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/logistics
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: orders
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

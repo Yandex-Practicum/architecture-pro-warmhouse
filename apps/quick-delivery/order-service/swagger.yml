@@ -1,0 +1,45 @@
+swagger: '2.0'
+info:
+  title: Order Service API
+  version: 1.0.0
+paths:
+  /orders:
+    post:
+      summary: Create a new order
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              customer_name:
+                type: string
+              item:
+                type: string
+      responses:
+        201:
+          description: Order created successfully
+  /orders/{order_id}:
+    put:
+      summary: Update an order
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: order_id
+          required: true
+          type: integer
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+      responses:
+        200:
+          description: Order updated successfully

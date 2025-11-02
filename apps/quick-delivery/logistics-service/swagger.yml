@@ -1,0 +1,43 @@
+swagger: '2.0'
+info:
+  title: Logistics Service API
+  version: 1.0.0
+paths:
+  /deliveries:
+    post:
+      summary: Create a new delivery
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              order_id:
+                type: integer
+      responses:
+        201:
+          description: Delivery created successfully
+  /deliveries/{delivery_id}:
+    put:
+      summary: Update a delivery
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: delivery_id
+          required: true
+          type: integer
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+      responses:
+        200:
+          description: Delivery updated successfully

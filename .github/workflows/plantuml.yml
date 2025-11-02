@@ -1,0 +1,41 @@
+name: PlantUML Diagrams
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  generate-diagrams:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+
+      - name: Install PlantUML
+        run: sudo apt-get install plantuml
+
+      - name: Generate Diagrams
+        run: |
+          plantuml schemas/context/*.puml
+          plantuml schemas/container/*.puml
+          plantuml schemas/component/*.puml
+          plantuml schemas/code/*.puml
+
+      - name: Commit Diagrams
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add schemas/**/*.png
+          git commit -m "Automated diagram generation"
+          git push origin main
+        if: success()
