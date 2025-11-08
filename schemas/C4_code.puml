@@ -9,9 +9,19 @@ class User {
   +void login()
 }
 
+class House {
+  +int id
+  +String name
+  +String email
+
+  +void create()
+  +void update()
+  +void delete()
+}
+
 class Device {
   +int id
-  +int userId
+  +int houseId
   +String name
   +String type
   +String model
@@ -25,6 +35,7 @@ class Device {
   +void delete()
 }
 
-User "1" -- "0..*" Device : has
+User "1" -- "0..*" House : has
+House "1" -- "0..*" Device : has
 
 @enduml

@@ -5,32 +5,45 @@ Person(client, "Client", "Пользователь системы «Тёплый
 Person(operator, "Operator", "Оператор поддержки. Подключает новых пользователей")
 
 Container_Boundary(smartHomeSystem, "SmartHome System") {
-    Container(apiGW, "API GateWay", "Java/NodeJs", "Вэб-вервисы для пользователей и мобильных приложений")
+    Container(apiGW, "API GateWay", "Java/NodeJs", "Вэб-вервисы для пользователей и мобильных приложений. Здесь запросы роутятся либо в старый монолит, либо в новые микросервисы")
+    Container(smartHomeLegacy, "SmartHome Legacy Service", "Go", "Старый монолит")
+    ContainerDb(smartHomeDatabase, "SmartHome Database", "PostgreSQL", "БД старого монолита")
     Container(userService, "User Service", "Java|Go", "Сервис управления пользователями")
     ContainerDb(userDatabase, "User Database", "PostgreSQL", "БД пользователей")
     Container(deviceService, "Device Service", "Java|Go", "Сервис управления устройствами")
     ContainerDb(deviceDatabase, "Device Database", "PostgreSQL", "БД устройств")
     Container(telemetryService, "Telemetry Service", "Go|Python", "Сервис взаимодействия с устройствами для получения телеметрии")
     ContainerDb(telemetryDatabase, "Telemetry Database", "PostgreSQL", "БД с данными телеметрии")
+    ContainerQueue(deviceEventsMq, "Device Events MessageQueue", "RabbitMQ|Kafka", "Очередь событий об изменении устройств")
 }
 
-SystemQueue_Ext(smartDevices ,"SmartDevices", "Внешние устройства в домах пользователей")
+System_Ext(smartDevices ,"External Smart Devices", "Внешние устройства в домах пользователей")
+SystemQueue_Ext(smartDevicesMq ,"External Smart Devices MessageQueue", "MQ для Внешних устройств")
 
+Rel(smartHomeLegacy, smartHomeDatabase, "Чтение/запись", "SQL")
 Rel(userService, userDatabase, "Чтение/запись" ,"SQL")
 Rel(deviceService, deviceDatabase, "Чтение/запись", "SQL")
 Rel(telemetryService, telemetryDatabase, "Чтение/запись", "SQL")
 
-Rel(telemetryService, deviceService, "Получает метаинформацию об устройствах", "REST")
-Rel(deviceService, userService, "Привязка устройства к пользователю", "REST")
+Rel(telemetryService, deviceService, "Чтение метаинформации об устройствах(для отображения обогащенных метрик)", "REST")
+Rel(deviceService, userService, "Привязка устройства к дому/пользователю", "REST")
 
 Rel(client, apiGW, "Отслеживание и управление устройствами", "HTTPS")
 Rel(operator, apiGW, "Управление устройствами", "HTTPS")
 
+Rel(apiGW, smartHomeLegacy, "Запросы по старым сенсорам", "REST")
 Rel(apiGW, userService, "CRUD пользователей + Аутентификация", "REST")
 Rel(apiGW, deviceService, "CRUD устройств", "REST")
 Rel(apiGW, telemetryService, "Получение метрик", "REST")
 
-Rel(deviceService, smartDevices, "Управляющие команды для устройств", "MQ")
-Rel(smartDevices, telemetryService, "Отправка метрик с устройств","MQ")
+Rel(deviceService, deviceEventsMq, "События об удалении устройств", "MQ")
+Rel(deviceEventsMq, telemetryService, "События на очистку метрик по удаленным устройствам", "MQ")
+
+Rel(deviceService, smartDevicesMq, "Управляющие команды для устройств", "MQ")
+Rel(smartDevicesMq, deviceService, "Авторегистрация/активация/деактивация устройств","MQ")
+Rel(smartDevicesMq, telemetryService, "Отправка метрик с устройств","MQ")
+
+Rel(smartDevices, smartDevicesMq, "MQ")
+Rel(smartDevicesMq, smartDevices, "MQ")
 
 @enduml
