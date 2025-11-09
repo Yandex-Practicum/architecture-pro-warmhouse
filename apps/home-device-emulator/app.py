@@ -64,11 +64,11 @@ def send_metrics_thread_function(unused, halt_event, interval=10):
     global device_states, desired_value
     try:
         while not halt_event.is_set():
-            print(f' ... Ждем {interval} секунд...')
-            time.sleep(interval)
-
             if not device_states:
                 print(f' ... Ждем запуска приложения device-service...')
+
+            print(f' ... Ждем {interval} секунд...')
+            time.sleep(interval)
 
             for device_id, device_state in device_states.items():
                 if device_state.active:
