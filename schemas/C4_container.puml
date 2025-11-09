@@ -15,6 +15,7 @@ Container_Boundary(smartHomeSystem, "SmartHome System") {
     Container(telemetryService, "Telemetry Service", "Go|Python", "Сервис взаимодействия с устройствами для получения телеметрии")
     ContainerDb(telemetryDatabase, "Telemetry Database", "PostgreSQL", "БД с данными телеметрии")
     ContainerQueue(deviceEventsMq, "Device Events MessageQueue", "RabbitMQ|Kafka", "Очередь событий об изменении устройств")
+    Container(auditTrails, "Audit Trails", "Python", "Аудитные события устройств")
 }
 
 System_Ext(smartDevices ,"External Smart Devices", "Внешние устройства в домах пользователей")
@@ -36,6 +37,7 @@ Rel(apiGW, userService, "CRUD пользователей + Аутентифик�
 Rel(apiGW, deviceService, "CRUD устройств", "REST")
 Rel(apiGW, telemetryService, "Получение метрик", "REST")
 
+Rel(deviceEventsMq, auditTrails, "Аудитные события устройств", "MQ")
 Rel(deviceService, deviceEventsMq, "События об удалении устройств", "MQ")
 Rel(deviceEventsMq, telemetryService, "События на очистку метрик по удаленным устройствам", "MQ")
 

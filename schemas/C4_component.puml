@@ -16,6 +16,7 @@ Container_Boundary(smartHomeSystem, "SmartHome System") {
         Component(eventProcessor, "Device Events Processor", "Обрабатывает события от устройств")
     }
     ContainerDb(deviceDatabase, "Device Database", "PostgreSQL", "БД устройств")
+    Container(auditTrails, "Audit Trails", "Python", "Аудитные события устройств")
 }
 
 Component_Ext(smartDevices ,"SmartDevices", "Внешние устройства в домах пользователей")
@@ -36,6 +37,7 @@ Rel(eventProcessor, deviceAuthorizer, "Авторизация устройств
 Rel(eventProcessor, deviceRepository, "Включение/отключение устройств")
 
 Rel(deviceAPIController, eventsPublisher, "Управляющие команды для устройств")
+Rel(eventsPublisher, auditTrails, "Аудитные события устройств", "MQ")
 Rel(eventsPublisher, smartDevices, "Управляющие команды для устройств", "MQ")
 Rel(eventsPublisher, telemetryService, "События на подчистку метрик", "MQ")
 Rel(smartDevices, eventConsumer, "Сообщения start|stop от внешних устройств")

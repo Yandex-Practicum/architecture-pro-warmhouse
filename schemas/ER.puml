@@ -9,33 +9,28 @@ entity "User" as user {
   created_at : timestamp
 }
 
+entity "House" as house {
+  * house_id : int <<PK>>
+  --
+  name : string
+}
+
 entity "Device" as device {
   * id : int <<PK>>
   --
-  user_id : int <<FK>>
+  house_id : int <<FK>>
   name : string
+  mac_address: string
   type : string
   status : string
   location : string
   created_at : timestamp
 }
 
-entity "Sensor" as sensor {
+entity "DeviceMetricEntry" as deviceMetricEntry {
   * id : int <<PK>>
   --
-  user_id : int <<FK>>
-  name : string
-  type : string
-  unit : string
-  status : string
-  location : string
-  created_at : timestamp
-}
-
-entity "TelemetryData" as telemetry {
-  * id : int <<PK>>
-  --
-  sensor_id : int <<FK>>
+  device_id : int <<FK>>
   timestamp : timestamp
   event_data : json
 }
@@ -49,8 +44,8 @@ entity "DeviceCommand" as command {
 }
 
 ' Связи
-user ||--o{ device : "owns"
-user ||--o{ sensor : "owns"
+user ||--o{ house : "owns"
+house ||--o{ device : "owns"
 device ||--o{ command : "handles"
-sensor ||--o{ telemetry : "generates"
+device ||--o{ deviceMetricEntry : "generates"
 @enduml

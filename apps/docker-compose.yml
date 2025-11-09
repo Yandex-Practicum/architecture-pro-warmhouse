@@ -159,19 +159,19 @@ services:
       - smarthome-network
 
 
-  audit-trails-service:
-    build: ./audit-trails-service
-    container_name: audit-trails-service
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    environment:
-      - MQ_HOST=rabbitmq
-      - MQ_PORT=5672
-      - MQ_USER=${MQ_USER}
-      - MQ_PASSWORD=${MQ_PASSWORD}
-    networks:
-      - smarthome-network
+#  audit-trails-service:
+#    build: ./audit-trails-service
+#    container_name: audit-trails-service
+#    depends_on:
+#      rabbitmq:
+#        condition: service_healthy
+#    environment:
+#      - MQ_HOST=rabbitmq
+#      - MQ_PORT=5672
+#      - MQ_USER=${MQ_USER}
+#      - MQ_PASSWORD=${MQ_PASSWORD}
+#    networks:
+#      - smarthome-network
 
 volumes:
   postgres_data:
