@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI
 
 from health_router import router as healthcheck_router
@@ -9,4 +10,4 @@ app.include_router(healthcheck_router)
 app.include_router(temperature_router)
 
 if __name__ == '__main__':
-    uvicorn.run("app:app", host="0.0.0.0", port=8081, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8091, reload=True)
