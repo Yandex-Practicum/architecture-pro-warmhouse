@@ -33,6 +33,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-amqp:${springBootVersion}")
 
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
+
     runtimeOnly("org.postgresql:postgresql")
 }
 
