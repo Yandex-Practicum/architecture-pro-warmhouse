@@ -117,7 +117,7 @@ Swagger документация доступна по ссылкам
 #### Запустить эмулятор
 
 ```bash
-docker build -t home-device-emulator . && docker run --network host -it home-device-emulator
+docker build -t home-device-emulator ./apps/home-device-emulator && docker run --network host -it home-device-emulator
 ```
 
 1. Введите идентификатор дома (подойдет любое положительное число, так как сервис управления домами не реализован).
