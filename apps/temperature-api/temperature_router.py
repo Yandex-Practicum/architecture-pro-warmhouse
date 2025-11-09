@@ -20,8 +20,7 @@ class TemperatureResponse(BaseModel):
 router = APIRouter(prefix="/temperature")
 
 
-@router.get("", response_model=TemperatureResponse)
-async def get_temperature(sensor_id: Optional[str] = None, location: Optional[str] = None):
+def get_temperature_internal(sensor_id: Optional[str] = None, location: Optional[str] = None):
     if not location and not sensor_id:
         sensor_id = str(random.randint(0, 3))
 
@@ -46,8 +45,19 @@ async def get_temperature(sensor_id: Optional[str] = None, location: Optional[st
             sensor_id = "0"
 
     value = random.randint(-50, 40)
+
     return TemperatureResponse(
         value=value,
         sensor_id=sensor_id,
         location=location,
     )
+
+
+@router.get("", response_model=TemperatureResponse)
+async def get_temperature(sensor_id: Optional[str] = None, location: Optional[str] = None):
+    return get_temperature_internal(sensor_id=sensor_id, location=location)
+
+
+@router.get("/{sensor_id}", response_model=TemperatureResponse)
+async def get_sensor_temperature(sensor_id: str):
+    return get_temperature_internal(sensor_id=sensor_id)

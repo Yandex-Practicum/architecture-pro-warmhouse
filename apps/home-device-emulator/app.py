@@ -56,7 +56,7 @@ def on_message_callback(ch, method, properties, body):
             sys.exit(0)
 
 
-def send_metrics_thread_function(unused, halt_event, interval=3):
+def send_metrics_thread_function(unused, halt_event, interval=10):
     # Отправляем в очередь метрики от нашего устройства
     telemetry_metrics_mq_connection = pika.BlockingConnection(pika.URLParameters(mq_url))
     telemetry_metrics_mq_channel = telemetry_metrics_mq_connection.channel()
