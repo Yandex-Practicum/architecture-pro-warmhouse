@@ -1,26 +1,156 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: smarthome-postgres
-  ## тут нужно добавить настройки
+  rabbitmq:
+    image: rabbitmq:${RABBITMQ_VERSION}
+    hostname: rabbitmq
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${MQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${MQ_PASSWORD}
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "status" ]
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - smarthome-network
 
   temperature-api:
-  ## тут нужно добавить приложение
+    build: ./temperature-api
+    container_name: temperature-api
+    ports:
+      - "8081:8081"
+    networks:
+      - smarthome-network
+
+  device-service-postgres:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: device-service-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - device-service_postgres_data:/var/lib/postgresql/data
+      - ./device-service/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: pg_isready -U ${POSTGRES_USER} -d deviceservice
+    networks:
+      - smarthome-network
+
+  device-service:
+    build:
+      context: ./device-service
+      additional_contexts:
+        commons: ./common
+      dockerfile: ./Dockerfile
+    container_name: device-service
+    depends_on:
+      device-service-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      - DATABASE_HOST=device-service-postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=deviceservice
+      - DATABASE_USER=${POSTGRES_USER}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+      - MQ_HOST=rabbitmq
+      - MQ_PORT=5672
+      - MQ_USER=${MQ_USER}
+      - MQ_PASSWORD=${MQ_PASSWORD}
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8083/actuator/health" ]
+    networks:
+      - smarthome-network
+
+  telemetry-service-postgres:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: telemetry-service-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - telemetry-service_postgres_data:/var/lib/postgresql/data
+      - ./telemetry-service/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: pg_isready -U ${POSTGRES_USER} -d telemetryservice
+    networks:
+      - smarthome-network
+
+  telemetry-service:
+    build:
+      context: ./telemetry-service
+      additional_contexts:
+        commons: ./common
+      dockerfile: ./Dockerfile
+    container_name: telemetry-service
+    depends_on:
+      telemetry-service-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      device-service:
+        condition: service_healthy
+    ports:
+      - "8084:8084"
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8084/actuator/health" ]
+    environment:
+      - DATABASE_HOST=telemetry-service-postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=telemetryservice
+      - DATABASE_USER=${POSTGRES_USER}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+      - MQ_HOST=rabbitmq
+      - MQ_PORT=5672
+      - MQ_USER=${MQ_USER}
+      - MQ_PASSWORD=${MQ_PASSWORD}
+      - DEVICE_SERVICE_HOST=device-service
+      - DEVICE_SERVICE_PORT=8083
+    networks:
+      - smarthome-network
+
+  smarthome-postgres:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: smarthome-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./smart_home/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: pg_isready -U ${POSTGRES_USER} -d smarthome
+    networks:
+      - smarthome-network
 
   app:
     build:
       context: ./smart_home
-      dockerfile: Dockerfile
+      dockerfile: ./Dockerfile
     container_name: smarthome-app
     depends_on:
-      postgres:
+      smarthome-postgres:
         condition: service_healthy
       temperature-api:
         condition: service_started
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/smarthome
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@smarthome-postgres:5432/smarthome
       - TEMPERATURE_API_URL=http://temperature-api:8081
     ports:
       - "8080:8080"
@@ -28,8 +158,26 @@ services:
     networks:
       - smarthome-network
 
+
+  audit-trails-service:
+    build: ./audit-trails-service
+    container_name: audit-trails-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - MQ_HOST=rabbitmq
+      - MQ_PORT=5672
+      - MQ_USER=${MQ_USER}
+      - MQ_PASSWORD=${MQ_PASSWORD}
+    networks:
+      - smarthome-network
+
 volumes:
   postgres_data:
+  device-service_postgres_data:
+  telemetry-service_postgres_data:
+  rabbitmq_data:
 
 networks:
   smarthome-network:
