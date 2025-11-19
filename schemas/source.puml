@@ -1,0 +1,60 @@
+@startuml source
+
+''' init layout
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+skinparam linetype ortho
+skinparam nodesep 150
+skinparam ranksep 100
+skinparam sequenceMessageAlign center
+
+<style>
+arrow {
+    FontName Arial
+    FontSize 12
+    FontStyle italic
+}
+</style>
+
+''' end init layout
+
+title
+    <b>Система управления отоплением</b>
+    <i> Исходная схема приложения </i>
+    <i> монолит </i>
+end title
+
+''' init participants
+
+actor "User" as user
+
+System_Boundary(client, "Local temperature sensor") {
+    System_Ext(sensorApi, "Temperature service", "REST API")
+}
+
+System_Boundary(server, "Main system, monolith") {
+    Container(sensorHandler, "TemperatureService", "golang", "HTTP request to sensor")
+    Container(mainApi, "external API", "golang, gin", "CRUD")    
+    Container(dal, "DataLayer", "golang, pgxpool", "Operations with DB")
+    ContainerDb(env, "Settings storage", "env variables")
+}
+
+database "Postgres" as db
+
+''' end init
+
+''' relations
+
+Rel_R(user, mainApi, "Manage sensors", "HTTP")
+Rel_D(mainApi, dal, "manage sensors")
+Rel_R(mainApi, sensorHandler, "Get current\nvalue")
+Rel_R(sensorHandler, sensorApi, "Get current\nvalue", "HTTP")
+Rel_D(dal, db, "Get or Update\nsensor data")
+Rel_D(sensorHandler, env, "Get sensor\nAPI link")
+Rel_R(dal, env, "Get DB\nconnString")
+
+''' end relations
+
+@enduml

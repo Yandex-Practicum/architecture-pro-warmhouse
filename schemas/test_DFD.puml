@@ -1,0 +1,22 @@
+@startuml DFD
+
+autonumber
+
+actor "User" as user
+participant "React" as front
+
+box "System" #LightBlue
+participant "Nginx" as balanser
+participant "Backend" as api
+database "Postgres" as db
+end box
+
+user -> front: тыкает кнопку
+front -> balanser++: отправляем Post
+balanser -> api++: валидированный и авторизованный Post
+api -> db: Сохраняем лог
+api -> balanser--: 200 Ok
+balanser -> front--: Плашка "Запрос отправлен"
+
+
+@enduml
