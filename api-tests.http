@@ -1,0 +1,128 @@
+### Smart Home API Tests
+### Используйте расширение REST Client для выполнения запросов
+
+### ============================================
+### Sensor Management Service (Port 8080)
+### ============================================
+
+### Get all sensors
+GET http://localhost:8080/api/v1/sensors
+
+### Get sensor by ID
+GET http://localhost:8080/api/v1/sensors/1
+
+### Create sensor
+POST http://localhost:8080/api/v1/sensors
+Content-Type: application/json
+
+{
+  "name": "Living Room Temperature",
+  "type": "temperature",
+  "location": "Living Room",
+  "unit": "Celsius"
+}
+
+### Update sensor
+PUT http://localhost:8080/api/v1/sensors/1
+Content-Type: application/json
+
+{
+  "name": "Updated Sensor Name",
+  "location": "Bedroom"
+}
+
+### Update sensor value
+PATCH http://localhost:8080/api/v1/sensors/1/value
+Content-Type: application/json
+
+{
+  "value": 22.5,
+  "status": "active"
+}
+
+### Get temperature by location
+GET http://localhost:8080/api/v1/sensors/temperature/Living%20Room
+
+### Delete sensor
+DELETE http://localhost:8080/api/v1/sensors/1
+
+### ============================================
+### Telemetry Service (Port 8082)
+### ============================================
+
+### Get telemetry by sensor ID
+GET http://localhost:8082/api/v1/telemetry/sensors/1
+
+### Get telemetry history
+GET http://localhost:8082/api/v1/telemetry/sensors/1/history?limit=10
+
+### Get telemetry history with date range
+GET http://localhost:8082/api/v1/telemetry/sensors/1/history?from=2024-01-01T00:00:00Z&to=2024-12-31T23:59:59Z&limit=100
+
+### Collect telemetry
+POST http://localhost:8082/api/v1/telemetry/collect
+Content-Type: application/json
+
+{
+  "sensor_ids": [1, 2, 3]
+}
+
+### ============================================
+### Device Management Service (Port 8083)
+### ============================================
+
+### Get all devices
+GET http://localhost:8083/api/v1/devices
+
+### Get device by ID
+GET http://localhost:8083/api/v1/devices/1
+
+### Create device
+POST http://localhost:8083/api/v1/devices
+Content-Type: application/json
+
+{
+  "name": "Smart Thermostat",
+  "type": "thermostat",
+  "location": "Living Room",
+  "configuration": {
+    "target_temperature": 22,
+    "mode": "auto"
+  }
+}
+
+### Update device
+PUT http://localhost:8083/api/v1/devices/1
+Content-Type: application/json
+
+{
+  "name": "Updated Device Name",
+  "location": "Bedroom",
+  "configuration": {
+    "target_temperature": 23
+  }
+}
+
+### Update device state
+PATCH http://localhost:8083/api/v1/devices/1/state
+Content-Type: application/json
+
+{
+  "state": "on",
+  "reason": "User activated"
+}
+
+### Delete device
+DELETE http://localhost:8083/api/v1/devices/1
+
+### ============================================
+### Temperature API (Port 8081)
+### ============================================
+
+### Get temperature by location
+GET http://localhost:8081/temperature?location=Living%20Room
+
+### Get temperature by sensor ID
+GET http://localhost:8081/temperature/1
+
+

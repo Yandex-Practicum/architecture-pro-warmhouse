@@ -1,0 +1,181 @@
+openapi: 3.0.3
+info:
+  title: Telemetry Service API
+  description: API для сбора и обработки телеметрических данных
+  version: 1.0.0
+servers:
+  - url: http://localhost:8082/api/v1
+    description: Локальный сервер
+  - url: http://telemetry-service:8082/api/v1
+    description: Production сервер
+
+paths:
+  /telemetry/sensors/{sensorId}:
+    get:
+      summary: Получить текущую телеметрию по датчику
+      operationId: getTelemetryBySensor
+      tags:
+        - Telemetry
+      parameters:
+        - name: sensorId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID датчика
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryData'
+        '404':
+          description: Телеметрия не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /telemetry/sensors/{sensorId}/history:
+    get:
+      summary: Получить историю телеметрии по датчику
+      operationId: getTelemetryHistory
+      tags:
+        - Telemetry
+      parameters:
+        - name: sensorId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID датчика
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Начальная дата
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Конечная дата
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+          description: Лимит записей
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TelemetryData'
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /telemetry/collect:
+    post:
+      summary: Собрать телеметрию с датчиков
+      operationId: collectTelemetry
+      tags:
+        - Telemetry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelemetryCollectionRequest'
+      responses:
+        '200':
+          description: Телеметрия успешно собрана
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collected:
+                    type: integer
+                    description: Количество собранных записей
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    TelemetryData:
+      type: object
+      properties:
+        id:
+          type: integer
+        sensor_id:
+          type: integer
+        value:
+          type: number
+          format: float
+        unit:
+          type: string
+        status:
+          type: string
+        recorded_at:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+    
+    TelemetryCollectionRequest:
+      type: object
+      properties:
+        sensor_ids:
+          type: array
+          items:
+            type: integer
+          description: Список ID датчиков для сбора данных
+        force:
+          type: boolean
+          default: false
+          description: Принудительный сбор данных
+    
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Сообщение об ошибке
+
+

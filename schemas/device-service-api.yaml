@@ -1,0 +1,298 @@
+openapi: 3.0.3
+info:
+  title: Device Management Service API
+  description: API для управления устройствами умного дома
+  version: 1.0.0
+servers:
+  - url: http://localhost:8083/api/v1
+    description: Локальный сервер
+  - url: http://device-service:8083/api/v1
+    description: Production сервер
+
+paths:
+  /devices:
+    get:
+      summary: Получить список всех устройств
+      operationId: getDevices
+      tags:
+        - Devices
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    post:
+      summary: Создать новое устройство
+      operationId: createDevice
+      tags:
+        - Devices
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceCreate'
+      responses:
+        '201':
+          description: Устройство успешно создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /devices/{id}:
+    get:
+      summary: Получить устройство по ID
+      operationId: getDeviceById
+      tags:
+        - Devices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID устройства
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Устройство не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      summary: Обновить устройство
+      operationId: updateDevice
+      tags:
+        - Devices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID устройства
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceUpdate'
+      responses:
+        '200':
+          description: Устройство успешно обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Устройство не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      summary: Удалить устройство
+      operationId: deleteDevice
+      tags:
+        - Devices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID устройства
+      responses:
+        '200':
+          description: Устройство успешно удалено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Устройство не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /devices/{id}/state:
+    patch:
+      summary: Изменить состояние устройства
+      operationId: updateDeviceState
+      tags:
+        - Devices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID устройства
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - state
+              properties:
+                state:
+                  type: string
+                  enum: [on, off, standby, error]
+                reason:
+                  type: string
+                  description: Причина изменения состояния
+      responses:
+        '200':
+          description: Состояние успешно обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Устройство не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [thermostat, heater, air_conditioner, light, camera]
+        location:
+          type: string
+        status:
+          type: string
+          enum: [on, off, standby, error]
+        configuration:
+          type: object
+          additionalProperties: true
+        last_updated:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    
+    DeviceCreate:
+      type: object
+      required:
+        - name
+        - type
+        - location
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [thermostat, heater, air_conditioner, light, camera]
+        location:
+          type: string
+        configuration:
+          type: object
+          additionalProperties: true
+    
+    DeviceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [thermostat, heater, air_conditioner, light, camera]
+        location:
+          type: string
+        configuration:
+          type: object
+          additionalProperties: true
+    
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Сообщение об ошибке
+
+

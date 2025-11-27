@@ -1,7 +1,4 @@
--- Create the database if it doesn't exist
-CREATE DATABASE smarthome;
-
--- Connect to the database
+-- Connect to smarthome database
 \c smarthome;
 
 -- Create the sensors table

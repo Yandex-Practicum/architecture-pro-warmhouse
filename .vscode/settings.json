@@ -1,0 +1,10 @@
+{
+  "markdown.preview.breaks": true,
+  "markdown.preview.plantuml.enable": true,
+  "markdown.preview.plantuml.server": "https://www.plantuml.com/plantuml",
+  "markdown.plantuml.server": "https://www.plantuml.com/plantuml",
+  "markdown-preview-enhanced.enablePlantUML": true,
+  "markdown-preview-enhanced.plantumlServer": "https://www.plantuml.com/plantuml"
+}
+
+
