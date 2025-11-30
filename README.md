@@ -91,13 +91,15 @@ LAYOUT_WITH_LEGEND()
 title Контекстная диаграмма Smart Home System
 
 Person(user, "Пользователь", "Использует систему для управления умным домом")
-System(smarthome, "Smart Home Monolith", "Монолитное приложение для управления датчиками и устройствами")
+System(smarthome, "Smart Home System", "Система для управления датчиками и устройствами умного дома")
 System_Ext(temperature_api, "Temperature API", "Внешний сервис для получения данных о температуре")
-SystemDb(postgres, "PostgreSQL", "База данных для хранения информации о датчиках")
+System_Ext(devices, "IoT Устройства", "Физические устройства умного дома (датчики, контроллеры)")
+SystemDb(postgres, "PostgreSQL", "База данных для хранения информации о датчиках и устройствах")
 
 Rel(user, smarthome, "Использует", "HTTP/REST")
 Rel(smarthome, postgres, "Читает и записывает", "SQL")
 Rel(smarthome, temperature_api, "Получает данные", "HTTP/REST")
+Rel(devices, smarthome, "Отправляет телеметрию, получает команды", "HTTP/MQTT")
 
 @enduml
 ```
@@ -117,6 +119,7 @@ LAYOUT_WITH_LEGEND()
 title Диаграмма контейнеров Smart Home System
 
 Person(user, "Пользователь", "Использует систему для управления умным домом")
+System_Ext(iot_devices, "IoT Устройства", "Физические устройства умного дома (датчики температуры, контроллеры, умные розетки)")
 
 System_Boundary(smarthome, "Smart Home System") {
     Container(sensor_service, "Sensor Management Service", "Go, REST API", "Управление датчиками и их метаданными")
@@ -141,6 +144,9 @@ Rel(device_service, device_db, "Читает и записывает", "SQL")
 Rel(sensor_service, message_broker, "Публикует события", "AMQP/Kafka")
 Rel(telemetry_service, message_broker, "Подписывается на события", "AMQP/Kafka")
 Rel(device_service, message_broker, "Подписывается на события", "AMQP/Kafka")
+Rel(iot_devices, telemetry_service, "Отправляет телеметрию", "HTTP/REST")
+Rel(iot_devices, device_service, "Отправляет статус, получает команды", "HTTP/REST")
+Rel(device_service, iot_devices, "Отправляет команды управления", "HTTP/REST")
 
 @enduml
 ```
@@ -188,13 +194,15 @@ title Компоненты Telemetry Service
 
 Container(telemetry_service, "Telemetry Service", "Go", "Сбор и обработка телеметрии")
 
-Component(telemetry_handler, "Telemetry Handler", "HTTP handlers", "Обработка HTTP запросов, валидация")
+Component(telemetry_handler, "Telemetry Handler", "HTTP handlers", "Обработка HTTP запросов, валидация, прием данных от устройств")
 Component(telemetry_repository, "Telemetry Repository", "Data access", "CRUD операции с телеметрией")
 Component(event_subscriber, "Event Subscriber", "Messaging", "Подписка на события от других сервисов")
 
 ContainerDb_Ext(telemetry_db, "Telemetry Database", "PostgreSQL", "Хранение телеметрических данных")
 Container_Ext(message_broker, "Message Broker", "RabbitMQ/Kafka", "Асинхронная коммуникация")
+System_Ext(iot_devices, "IoT Устройства", "Физические устройства умного дома")
 
+Rel(iot_devices, telemetry_handler, "Отправляет телеметрию", "HTTP/REST")
 Rel(telemetry_handler, telemetry_repository, "Использует для работы с данными", "Go method call")
 Rel(telemetry_handler, event_subscriber, "Обрабатывает события", "Go method call")
 Rel(telemetry_repository, telemetry_db, "Читает и записывает", "SQL")
