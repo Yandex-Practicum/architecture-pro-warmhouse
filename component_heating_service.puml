@@ -1,0 +1,35 @@
+@startuml Heating_Control_Service_Components
+!include schemas/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Component Diagram для Heating Control Service
+
+Person(homeowner, "Владелец дома", "Пользователь системы")
+
+Container_Boundary(heating_service, "Heating Control Service") {
+    Component(api_controller, "API Controller", "Go HTTP Handler", "REST API endpoints для управления отоплением")
+    Component(device_communicator, "Device Communicator", "Go", "Отправка команд на физические устройства")
+    Component(command_repository, "Command Repository", "Go", "Работа с базой данных команд")
+}
+
+ContainerDb(heating_db, "Heating Database", "PostgreSQL", "Хранит команды и историю управления")
+
+System_Ext(web_app, "Web Application", "Веб-интерфейс")
+System_Ext(heating_modules, "Модули управления отоплением", "Физические устройства")
+
+' Relationships from Web App
+Rel(web_app, api_controller, "Команды управления", "HTTPS/REST")
+Rel(homeowner, web_app, "Управляет отоплением", "HTTPS")
+
+' Relationships within service
+Rel(api_controller, device_communicator, "Отправляет команду", "")
+Rel(api_controller, command_repository, "Сохраняет и читает историю команд", "")
+
+Rel(command_repository, heating_db, "SQL запросы", "SQL/TCP")
+
+' External calls
+Rel(device_communicator, heating_modules, "Отправляет команду управления", "HTTP/REST")
+
+@enduml
+

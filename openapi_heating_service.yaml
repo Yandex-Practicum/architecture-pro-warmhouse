@@ -1,0 +1,96 @@
+openapi: 3.0.3
+info:
+  title: Heating Control Service API
+  version: 1.0.0
+  description: API для управления отоплением и отправки команд на устройства
+
+servers:
+  - url: http://localhost:8081/api/v1
+
+paths:
+  /commands:
+    get:
+      summary: Получить историю команд
+      tags:
+        - Commands
+      parameters:
+        - name: deviceId
+          in: query
+          schema:
+            type: integer
+          description: Фильтр по устройству
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+          description: Количество записей
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Command'
+    
+    post:
+      summary: Отправить команду управления отоплением
+      tags:
+        - Commands
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandCreate'
+      responses:
+        '200':
+          description: Команда успешно отправлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Command'
+
+components:
+  schemas:
+    Command:
+      type: object
+      properties:
+        id:
+          type: integer
+        deviceId:
+          type: integer
+        commandType:
+          type: string
+          enum: [turn_on, turn_off, set_temperature]
+        status:
+          type: string
+          enum: [pending, executed, failed]
+        createdAt:
+          type: string
+          format: date-time
+        executedAt:
+          type: string
+          format: date-time
+        userId:
+          type: integer
+    
+    CommandCreate:
+      type: object
+      required:
+        - deviceId
+        - commandType
+      properties:
+        deviceId:
+          type: integer
+        commandType:
+          type: string
+          enum: [turn_on, turn_off, set_temperature]
+        userId:
+          type: integer
+        parameters:
+          type: object
+          description: Дополнительные параметры команды
+

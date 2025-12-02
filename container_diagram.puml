@@ -1,0 +1,49 @@
+@startuml WarmHouse_Container_Diagram
+!include schemas/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Container Diagram для микросервисной архитектуры WarmHouse
+
+Person(homeowner, "Владелец дома", "Управляет отоплением и самостоятельно регистрирует устройства")
+
+System_Boundary(warmhouse_system, "WarmHouse Ecosystem") {
+    Container(web_app, "Web Application", "React/Vue.js", "Веб-интерфейс для управления отоплением и просмотра данных")
+    
+    Container(device_service, "Device Management Service", "Go", "Управление устройствами, регистрация датчиков, связь устройств с пользователями")
+    Container(heating_service, "Heating Control Service", "Go", "Управление отоплением, отправка команд включения/выключения")
+    Container(telemetry_service, "Telemetry Service", "Python", "Сбор и хранение данных телеметрии от датчиков")
+    
+    ContainerDb(device_db, "Device Database", "PostgreSQL", "Хранение устройств, пользователей")
+    ContainerDb(heating_db, "Heating Database", "PostgreSQL", "Хранение команд управления и истории")
+    ContainerDb(telemetry_db, "Telemetry Database", "PostgreSQL", "Хранение данных температуры")
+}
+
+System_Ext(heating_modules, "Модули управления отоплением", "Датчики температуры и контроллеры (100+ модулей)")
+
+' Relationships - Users to Frontend
+Rel(homeowner, web_app, "Управляет отоплением, просматривает данные", "HTTPS")
+
+' Relationships - Frontend to Services (direct)
+Rel(web_app, device_service, "Управление устройствами", "HTTPS/REST")
+Rel(web_app, heating_service, "Команды управления отоплением", "HTTPS/REST")
+Rel(web_app, telemetry_service, "Запрос данных телеметрии", "HTTPS/REST")
+
+' Relationships - Services to Databases
+Rel(device_service, device_db, "Читает/записывает", "SQL")
+Rel(heating_service, heating_db, "Читает/записывает", "SQL")
+Rel(telemetry_service, telemetry_db, "Записывает временные ряды", "SQL")
+
+' Relationships - Devices to Services (direct communication)
+Rel(heating_modules, telemetry_service, "Отправляет телеметрию", "HTTPS/REST")
+Rel(heating_service, heating_modules, "Отправляет команды управления", "HTTP/REST")
+
+' Service to Service communication
+Rel(heating_service, device_service, "Проверяет существование устройства", "HTTP/REST")
+Rel(telemetry_service, device_service, "Проверяет устройство", "HTTP/REST")
+
+@enduml
+
+
+
+

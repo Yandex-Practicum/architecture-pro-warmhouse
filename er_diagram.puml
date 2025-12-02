@@ -1,0 +1,105 @@
+@startuml WarmHouse_ER_Diagram
+
+' Настройка внешнего вида
+skinparam linetype ortho
+skinparam roundcorner 5
+skinparam class {
+    BackgroundColor<<DeviceDB>> LightBlue
+    BackgroundColor<<HeatingDB>> LightGreen
+    BackgroundColor<<TelemetryDB>> LightYellow
+    BorderColor Black
+    ArrowColor Black
+}
+
+title ER-диаграмма для WarmHouse Ecosystem
+
+package "Device Database (PostgreSQL)" {
+    entity "devices" as device <<DeviceDB>> {
+        * id : SERIAL <<PK>>
+        --
+        * name : VARCHAR(255)
+        * type : VARCHAR(50)
+        * status : VARCHAR(20)
+        user_id : INTEGER
+        * created_at : TIMESTAMP
+    }
+    
+    entity "users" as user <<DeviceDB>> {
+        * id : SERIAL <<PK>>
+        --
+        * full_name : VARCHAR(255)
+        * created_at : TIMESTAMP
+    }
+}
+
+package "Heating Database (PostgreSQL)" {
+    entity "device_commands" as command <<HeatingDB>> {
+        * id : SERIAL <<PK>>
+        --
+        * device_id : INTEGER <<FK>>
+        * command_type : VARCHAR(20)
+        * status : VARCHAR(20)
+        * created_at : TIMESTAMP
+        executed_at : TIMESTAMP
+        user_id : INTEGER
+    }
+}
+
+package "Telemetry Database (PostgreSQL)" {
+    entity "telemetry_data" as telemetry <<TelemetryDB>> {
+        * id : SERIAL <<PK>>
+        --
+        * device_id : INTEGER <<FK>>
+        * type : VARCHAR(50)
+        * value : DECIMAL(10,2)
+        * timestamp : TIMESTAMP
+    }
+}
+
+' Связи между сущностями
+user ||--o{ device : "владеет"
+device ||--o{ command : "получает команды"
+device ||--o{ telemetry : "отправляет данные"
+
+' Легенда
+legend right
+  |<back:LightBlue>   </back>| Device DB |
+  |<back:LightGreen>   </back>| Heating DB |
+  |<back:LightYellow>   </back>| Telemetry DB |
+endlegend
+
+note right of device
+  **Типы устройств:**
+  - thermostat
+  - temperature_sensor
+  - heating_controller
+  
+  **Статусы:**
+  - active
+  - inactive
+  - offline
+end note
+
+note right of command
+  **Типы команд:**
+  - turn_on
+  - turn_off
+  - set_temperature
+  
+  **Статусы:**
+  - pending
+  - executed
+  - failed
+end note
+
+note right of telemetry
+  **Типы телеметрии (type):**
+  - temperature
+  - humidity
+  - pressure
+  - battery_level
+  - signal_strength
+end note
+
+@enduml
+

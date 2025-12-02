@@ -1,0 +1,35 @@
+@startuml Telemetry_Service_Components
+!include schemas/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Component Diagram для Telemetry Service
+
+Person(homeowner, "Владелец дома", "Пользователь системы")
+
+Container_Boundary(telemetry_service, "Telemetry Service") {
+    Component(api_controller, "API Controller", "Python Flask/FastAPI", "REST API endpoints для телеметрии")
+    Component(data_processor, "Data Processor", "Python", "Обработка и агрегация данных")
+    Component(telemetry_repository, "Telemetry Repository", "Python", "Работа с базой данных телеметрии")
+}
+
+ContainerDb(telemetry_db, "Telemetry Database", "PostgreSQL", "Хранит данные температуры")
+
+System_Ext(web_app, "Web Application", "Веб-интерфейс")
+System_Ext(heating_modules, "Модули управления отоплением", "Физические датчики")
+
+' Relationships from devices and web app
+Rel(heating_modules, api_controller, "Отправляет телеметрию", "HTTPS/REST")
+Rel(web_app, api_controller, "Запрос данных", "HTTPS/REST")
+Rel(homeowner, web_app, "Просматривает данные", "HTTPS")
+
+' Relationships within service
+Rel(api_controller, data_processor, "Обрабатывает данные от датчиков", "")
+Rel(api_controller, telemetry_repository, "Запрашивает данные для веб-приложения", "")
+
+Rel(data_processor, telemetry_repository, "Сохраняет данные", "")
+
+Rel(telemetry_repository, telemetry_db, "SQL запросы", "SQL/TCP")
+
+@enduml
+

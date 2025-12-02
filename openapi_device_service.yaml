@@ -1,0 +1,142 @@
+openapi: 3.0.3
+info:
+  title: Device Management Service API
+  version: 1.0.0
+  description: API для управления устройствами и регистрации датчиков
+
+servers:
+  - url: http://localhost:8080/api/v1
+
+paths:
+  /devices:
+    get:
+      summary: Получить список устройств пользователя
+      tags:
+        - Devices
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+    
+    post:
+      summary: Зарегистрировать новое устройство
+      tags:
+        - Devices
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceCreate'
+      responses:
+        '200':
+          description: Устройство успешно зарегистрировано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+  
+  /devices/{deviceId}:
+    get:
+      summary: Получить информацию об устройстве
+      tags:
+        - Devices
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+    
+    patch:
+      summary: Изменить статус устройства (включить/выключить)
+      tags:
+        - Devices
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [active, inactive]
+          description: Новый статус устройства
+      responses:
+        '200':
+          description: Статус устройства успешно изменен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+    
+    delete:
+      summary: Удалить устройство
+      tags:
+        - Devices
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Устройство успешно удалено
+
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [thermostat, temperature_sensor, heating_controller]
+        status:
+          type: string
+          enum: [active, inactive, offline]
+        userId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+    
+    DeviceCreate:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [thermostat, temperature_sensor, heating_controller]
+        userId:
+          type: integer
+

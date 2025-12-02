@@ -1,0 +1,41 @@
+@startuml Device_Management_Service_Components
+!include schemas/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Component Diagram для Device Management Service
+
+Person(homeowner, "Владелец дома", "Пользователь системы")
+
+Container_Boundary(device_service, "Device Management Service") {
+    Component(api_controller, "API Controller", "Go HTTP Handler", "REST API endpoints для управления устройствами")
+    Component(device_registration, "Device Registration", "Go", "Регистрация и активация новых датчиков")
+    Component(device_manager, "Device Manager", "Go", "Управление устройствами и их конфигурацией")
+    Component(device_repository, "Device Repository", "Go", "Работа с базой данных устройств")
+}
+
+ContainerDb(device_db, "Device Database", "PostgreSQL", "Хранит устройства")
+
+Container_Ext(heating_service, "Heating Control Service", "Go", "Сервис управления отоплением")
+Container_Ext(telemetry_service, "Telemetry Service", "Python", "Сервис телеметрии")
+System_Ext(web_app, "Web Application", "Веб-интерфейс")
+
+' Relationships from Web App
+Rel(web_app, api_controller, "HTTP запросы", "HTTPS/REST")
+Rel(homeowner, web_app, "Использует", "HTTPS")
+
+' Relationships within service
+Rel(api_controller, device_registration, "Регистрирует устройство", "")
+Rel(api_controller, device_manager, "Управляет устройствами", "")
+
+Rel(device_registration, device_repository, "Сохраняет устройство", "")
+Rel(device_manager, device_repository, "Читает/обновляет", "")
+
+Rel(device_repository, device_db, "SQL запросы", "SQL/TCP")
+
+' External service calls
+Rel(heating_service, api_controller, "Проверяет устройство", "HTTP/REST")
+Rel(telemetry_service, api_controller, "Проверяет устройство", "HTTP/REST")
+
+@enduml
+

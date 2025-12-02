@@ -1,0 +1,29 @@
+@startuml WarmHouse_Context_Diagram
+!include schemas/C4_Context.puml
+
+' Заголовок диаграммы
+title Context Diagram для системы управления отоплением WarmHouse
+
+' Люди
+Person(homeowner, "Владелец дома", "Пользователь системы управления отоплением (100 веб-клиентов)")
+Person(technician, "Специалист по установке", "Выполняет подключение датчиков к системе")
+
+' Основная система
+System(warmhouse_app, "WarmHouse Application", "Монолитное приложение на Go для управления отоплением и мониторинга температуры")
+
+' Внешние системы
+System_Ext(heating_modules, "Модули управления отоплением", "Датчики температуры и контроллеры отопления в домах пользователей (100 модулей)")
+SystemDb_Ext(postgres, "PostgreSQL", "База данных для хранения данных о пользователях, датчиках и температуре")
+
+' Отношения
+Rel(homeowner, warmhouse_app, "Управляет отоплением, проверяет температуру", "HTTPS/Web")
+Rel(technician, warmhouse_app, "Подключает новые датчики к системе", "HTTPS/Web")
+
+Rel(warmhouse_app, heating_modules, "Отправляет команды управления, запрашивает данные о температуре", "Синхронные запросы")
+Rel(warmhouse_app, postgres, "Читает и записывает данные", "SQL/TCP")
+
+' Примечания
+LAYOUT_WITH_LEGEND()
+
+@enduml
+

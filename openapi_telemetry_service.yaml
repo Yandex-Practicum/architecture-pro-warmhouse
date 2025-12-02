@@ -1,0 +1,94 @@
+openapi: 3.0.3
+info:
+  title: Telemetry Service API
+  version: 1.0.0
+  description: API для сбора и получения данных телеметрии от датчиков
+
+servers:
+  - url: http://localhost:8082/api/v1
+
+paths:
+  /telemetry:
+    post:
+      summary: Отправить данные телеметрии (от датчика)
+      tags:
+        - Telemetry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelemetryCreate'
+      responses:
+        '200':
+          description: Данные успешно сохранены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryData'
+  
+  /telemetry/devices/{deviceId}:
+    get:
+      summary: Получить последние данные телеметрии устройства
+      tags:
+        - Telemetry
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TelemetryData'
+
+components:
+  schemas:
+    TelemetryData:
+      type: object
+      properties:
+        id:
+          type: integer
+        deviceId:
+          type: integer
+        type:
+          type: string
+          enum: [temperature, humidity, pressure, battery_level, signal_strength]
+        value:
+          type: number
+          format: float
+        timestamp:
+          type: string
+          format: date-time
+    
+    TelemetryCreate:
+      type: object
+      required:
+        - deviceId
+        - type
+        - value
+      properties:
+        deviceId:
+          type: integer
+        type:
+          type: string
+          enum: [temperature, humidity, pressure, battery_level, signal_strength]
+        value:
+          type: number
+          format: float
+        timestamp:
+          type: string
+          format: date-time
+          description: Если не указано, будет использовано текущее время сервера
+
