@@ -1,0 +1,16 @@
+@startuml
+title Service "Smart Home" Context diagram
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(client, "Client", "User of service 'Smart Home'")
+System_Ext(heatingSystem, "House heating system", "Heating system of 1..N houses")
+System(backend, "Service", "Service 'Smart Home'")
+
+Rel(client, backend, "Turn On/Off requests", "HTTP")
+Rel(backend, heatingSystem, "Get Temperature, Turn On/Off requests", "HTTP")
+Rel(heatingSystem, backend, "Register New Devices", "HTTP")
+
+@enduml
