@@ -1,0 +1,31 @@
+@startuml
+title Smart Home Device Service Component Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(DeviceManagementService, "Device Management Service") {
+  Container(DeviceService, "Device Service", "Go", "Interacts with house managing hubs")
+  Container(Database, "Database", "PostgreSQL", "Stores device data and schedules")
+  Container(EventStorage, "EventStorage", "Kafka", "Stores event messages")
+}
+
+System_Ext(ManagingHub, "Managing Hub", "Embedded", "Managing hub of house devices")
+
+Container(DeviceService, "Device Service", "Go") {
+  Component(DeviceServiceLayer, "Device Service Layer", "Business logic")
+  Component(DeviceRepositoryLayer, "Device Repository Layer", "Data access logic")
+  Component(DeviceEventConsumer, "Device Event Consumer", "Consume events logic")
+  Component(ManagingHubAdapter, "Managing Hub Adapter", "Interacts with house managing hubs")
+}
+
+Rel(EventStorage,DeviceEventConsumer,"Consumes events")
+Rel(DeviceEventConsumer,DeviceServiceLayer,"Send to process events")
+
+Rel(DeviceServiceLayer,DeviceRepositoryLayer,"Reads/Writes data")
+Rel(DeviceServiceLayer,ManagingHubAdapter,"Change requests")
+
+Rel(DeviceRepositoryLayer,Database,"Reads/Writes user data")
+Rel(ManagingHubAdapter,ManagingHub,"Change requests")
+@enduml

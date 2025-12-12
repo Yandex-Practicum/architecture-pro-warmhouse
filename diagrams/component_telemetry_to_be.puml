@@ -1,0 +1,30 @@
+@startuml
+title Smart Home Telemetry Service Component Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(TelemetryServiceContainer, "Telemetry Service") {
+  Container(TelemetryService, "Telemetry Service", "Go", "Processes data from devices")
+  Container(Database, "Database", "PostgreSQL", "Stores device data and schedules")
+  Container(EventStorage, "EventStorage", "Kafka", "Stores event messages")
+}
+
+Container(TelemetryService, "Telemetry Service", "Go") {
+  Component(TelemetryServiceLayer, "Telemetry Service Layer", "Business logic")
+  Component(TelemetryRepositoryLayer, "Telemetry Repository Layer", "Data access logic")
+  Component(TelemetryEventConsumer, "Telemetry Event Consumer", "Consume events logic")
+  Component(TelemetryEventProducer, "Telemetry Event Producer", "Produce events logic")
+}
+
+Rel(EventStorage,TelemetryEventConsumer,"Consumes events")
+Rel(TelemetryEventConsumer,TelemetryServiceLayer,"Send to process events")
+
+Rel(TelemetryServiceLayer,TelemetryRepositoryLayer,"Reads/Writes data")
+Rel(TelemetryServiceLayer,TelemetryEventProducer,"Produces get video events")
+
+Rel(TelemetryRepositoryLayer,Database,"Reads/Writes user data")
+Rel(TelemetryEventProducer,EventStorage,"Produces get video events")
+
+@enduml

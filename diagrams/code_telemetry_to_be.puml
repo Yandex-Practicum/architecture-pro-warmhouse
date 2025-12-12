@@ -1,0 +1,72 @@
+@startuml
+title Smart Home Telemetry Service Code Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+class Sensor {
+  +String ID
+  +String Name
+  +SensorType SensorType
+  +String Location
+  +BigDecimal Value
+  +String Unit
+  +String Status
+  +Timestamp CreatedAt
+  +Timestamp UpdatedAt
+}
+
+class GetTemperatureMessage {
+  +String SensorID
+  +BigDecimal Value
+  +Timestamp MeasuredAt
+}
+
+class ReadyToGiveMessage {
+  +String SensorID
+  +String VideoId
+  +Timestamp CreatedAt
+}
+
+class GetVideoDataMessage {
+  +String SensorID
+  +String VideoId
+  +Timestamp CreatedAt
+}
+
+class TemperatureEventConsumer {
+  +void consume()
+}
+
+class ReadyToGiveVideoEventConsumer {
+  +void consume()
+}
+
+class TemperatureHandler {
+  +void handle()
+}
+
+class VideoDataHandler {
+  +void handle()
+}
+
+class TemperatureRepository {
+  +void handle()
+}
+
+class GetVideoDataEventProducer {
+  +void consume()
+}
+
+TemperatureEventConsumer --> GetTemperatureMessage : consumes
+GetTemperatureMessage --> TemperatureHandler : handles
+TemperatureHandler --> Sensor : updates
+Sensor --> TemperatureRepository : saves
+
+ReadyToGiveVideoEventConsumer --> ReadyToGiveMessage : consumes
+ReadyToGiveMessage --> VideoDataHandler : handles
+VideoDataHandler --> GetVideoDataMessage : creates
+GetVideoDataMessage --> GetVideoDataEventProducer : produces
+
+@enduml

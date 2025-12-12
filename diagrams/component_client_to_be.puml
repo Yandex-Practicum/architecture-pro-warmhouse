@@ -1,0 +1,45 @@
+@startuml
+title Smart Home Client Web Application Component Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(ClientWebApplication, "Client Web Application") {
+  Container(WebApp, "Web Application", "Go", "Handles user interactions")
+  Container(Database, "Database", "PostgreSQL", "Stores user data and schedules")
+  Container(EventStorage, "EventStorage", "Kafka", "Stores event messages")
+}
+
+Container(WebApp, "Web Application", "Go") {
+  Component(AuthController, "Auth Controller", "Handles authentication and authorization")
+  Component(UserProfileController, "User Profile Controller", "Manages user profiles")
+  Component(HeatingController, "Heating Controller", "Manages heating systems")
+  Component(LightingController, "Lighting Controller", "Manages lighting systems")
+  Component(GateController, "Gate Controller", "Manages house gate systems")
+  Component(VideoSurveillanceController, "Video Surveillance Controller", "Manages video surveillance systems")
+
+  Component(UserServiceLayer, "Auth & User Profile Service Layer", "Business logic")
+  Component(DeviceServiceLayer, "Device Service Layer", "Business logic")
+
+  Component(UserRepositoryLayer, "Auth & User Profile Repository Layer", "Data access logic")
+  Component(DeviceRepositoryLayer, "Device Repository Layer", "Data access logic")
+  Component(DeviceEventProducer, "Device Event Producer", "Produce events logic")
+}
+
+Rel(AuthController,UserServiceLayer,"Calls business logic")
+Rel(UserProfileController,UserServiceLayer,"Calls business logic")
+Rel(HeatingController,DeviceServiceLayer,"Calls business logic")
+Rel(LightingController,DeviceServiceLayer,"Calls business logic")
+Rel(GateController,DeviceServiceLayer,"Calls business logic")
+Rel(VideoSurveillanceController,DeviceServiceLayer,"Calls business logic")
+
+Rel(UserServiceLayer,UserRepositoryLayer,"Reads/Writes data")
+Rel(DeviceServiceLayer,DeviceRepositoryLayer,"Reads/Writes data")
+Rel(DeviceServiceLayer,DeviceEventProducer,"Reads/Writes data")
+
+Rel(UserRepositoryLayer,Database,"Reads/Writes user data")
+Rel(DeviceRepositoryLayer,Database,"Reads/Writes user data")
+Rel(DeviceEventProducer,EventStorage,"Produces events")
+
+@enduml

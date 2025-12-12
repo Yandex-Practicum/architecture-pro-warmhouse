@@ -1,0 +1,43 @@
+@startuml
+title Service "Smart Home" Context diagram
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(client, "Client", "Users of smart home systems")
+System_Boundary(system, "Service 'Smart Home'") {
+    System(clientSystem, "Client system", "Allow customers to view information about their house devices and manage them")
+    System(deviceManagementSystem, "Device management system", "Interact with house managing hubs")
+    System(telemetrySystem, "Telemetry system", "Processes data from devices")
+    System(eventStorage, "Event Storage", "Asynchronous Message Broker")
+}
+System_Boundary(houseSystem, "Smart system of N house") {
+    System_Ext(managingHub, "Managing Hub", "Establish internet connections and interacts with devices")
+    System_Ext(heatingSystem, "Heating system", "Heating system of N house")
+    System_Ext(lightingSystem, "Lighting system", "Lighting system of N house")
+    System_Ext(gateManagementSystem, "Gate management system", "Gate management system of N house")
+    System_Ext(videoSurveillanceSystem, "Video surveillance system", "Video surveillance system of N house")
+}
+
+Rel(client, clientSystem, "Turn On/Off, Get Info requests", "HTTP")
+Rel(deviceManagementSystem, managingHub, "Turn On/Off requests", "HTTP")
+Rel(deviceManagementSystem, managingHub, "Get Video Data requests", "HTTP")
+
+Rel(clientSystem, eventStorage, "Turn On/Off events", "JSON")
+Rel(deviceManagementSystem, eventStorage, "Process events", "JSON")
+Rel(telemetrySystem, eventStorage, "Process events", "JSON")
+
+Rel(managingHub, heatingSystem, "Turn On/Off requests", "HTTP")
+Rel(managingHub, lightingSystem, "Turn On/Off requests", "HTTP")
+Rel(managingHub, gateManagementSystem, "Turn On/Off requests", "HTTP")
+Rel(managingHub, videoSurveillanceSystem, "Turn On/Off requests, Get Video Data", "HTTP")
+
+Rel(heatingSystem, managingHub, "Register New Device, Save Temperature events", "HTTP")
+Rel(lightingSystem, managingHub, "Register New Device event", "HTTP")
+Rel(gateManagementSystem, managingHub, "Register New Device event", "HTTP")
+Rel(videoSurveillanceSystem, managingHub, "Register New Device, Ready To Give Video events", "HTTP")
+
+Rel(managingHub, eventStorage, "Register New Device, Save Temperature, Ready To Give Video events", "HTTP")
+
+@enduml
