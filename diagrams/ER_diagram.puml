@@ -1,0 +1,75 @@
+@startuml
+
+class User {
+  +String ID
+  +String LastName
+  +String FirstName
+  +String MiddleName
+  +String AgreementId
+  +List<House> houses
+}
+
+class ManagingHub {
+  +String ID
+  +List<Sensor> sensors
+  +void activateSensor(String ID)
+  +void deactivateSensor(String ID)
+  +void sendEventToBroker(String ID, MessageType messageType)
+}
+
+class TemperatureMeasurement {
+  +Timestamp MeasuredAt
+  +String Value
+  +String SensorID
+}
+
+class VideoCapture {
+  +Timestamp CreatedAt
+  +String Data
+  +String SensorID
+}
+
+class House {
+  +String ID
+  +String Location
+  +ManagingHub managingHub
+  +List<TemperatureMeasurement> temperatureHistory
+  +List<VideoCapture> videoSurveillanceHistory
+}
+
+enum SensorType {
+  TEMPERATURE
+  LIGHTING_LAMP
+  GATE
+  VIDEO_CAMERA
+}
+
+enum MessageType {
+  GET_TEMPERATURE
+  READY_TO_GIVE_VIDEO
+}
+
+class Sensor {
+  +String ID
+  +String Name
+  +SensorType SensorType
+  +String Location
+  +String ManagingHubID
+  +BigDecimal Value
+  +String Unit
+  +String Status
+  +Timestamp CreatedAt
+  +Timestamp UpdatedAt
+  +void activate()
+  +void deactivate()
+  +void sendEvent()
+}
+
+User "1" -- "0..*" House : has
+House "1" -- "0..1" ManagingHub : relates
+ManagingHub "1" -- "0..*" Sensor : manages
+
+House "1" -- "0..*" TemperatureMeasurement : stores
+House "1" -- "0..*" VideoCapture : stores
+
+@enduml

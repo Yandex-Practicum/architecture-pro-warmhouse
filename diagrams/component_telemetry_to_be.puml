@@ -15,16 +15,13 @@ Container(TelemetryService, "Telemetry Service", "Go") {
   Component(TelemetryServiceLayer, "Telemetry Service Layer", "Business logic")
   Component(TelemetryRepositoryLayer, "Telemetry Repository Layer", "Data access logic")
   Component(TelemetryEventConsumer, "Telemetry Event Consumer", "Consume events logic")
-  Component(TelemetryEventProducer, "Telemetry Event Producer", "Produce events logic")
 }
 
 Rel(EventStorage,TelemetryEventConsumer,"Consumes events")
 Rel(TelemetryEventConsumer,TelemetryServiceLayer,"Send to process events")
 
 Rel(TelemetryServiceLayer,TelemetryRepositoryLayer,"Reads/Writes data")
-Rel(TelemetryServiceLayer,TelemetryEventProducer,"Produces get video events")
 
 Rel(TelemetryRepositoryLayer,Database,"Reads/Writes user data")
-Rel(TelemetryEventProducer,EventStorage,"Produces get video events")
 
 @enduml
