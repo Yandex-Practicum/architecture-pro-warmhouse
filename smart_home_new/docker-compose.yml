@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  shn-db:
+    image: postgres:16-alpine
+    container_name: shn-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shn
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - shn-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.4
+    container_name: shn-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+    networks:
+      - shn-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.4
+    container_name: shn-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - shn-network
+
+  client-api:
+    build:
+      context: ./client_api
+      dockerfile: Dockerfile
+    container_name: shn-client-api
+    depends_on:
+      shn-db:
+        condition: service_healthy
+      device-service:
+        condition: service_started
+      telemetry-service:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    networks:
+      - shn-network
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8080/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  device-service:
+    build:
+      context: ./device_service
+      dockerfile: Dockerfile
+    container_name: shn-device-service
+    depends_on:
+      shn-db:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    networks:
+      - shn-network
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8081/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  telemetry-service:
+    build:
+      context: ./telemetry_service
+      dockerfile: Dockerfile
+    container_name: shn-telemetry-service
+    depends_on:
+      shn-db:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+    networks:
+      - shn-network
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8082/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+networks:
+  shn-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
