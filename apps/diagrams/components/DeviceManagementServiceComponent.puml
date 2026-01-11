@@ -1,0 +1,39 @@
+@startuml
+title "Component Diagram – Device Management Service"
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(deviceMgmt, "Device Management Service") {
+
+    Component(api, "API Controller", "REST Controller", "Handles device registration and management requests")
+
+    Component(registration, "Registration Service", "Application Service", "Validates and registers new devices")
+
+    Component(lifecycle, "Lifecycle Manager", "Application Service", "Manages device states and lifecycle transitions")    
+
+    Component(eventListener, "Event Listener", "Event Consumer", "Consumes device lifecycle events")
+
+    Component(gatewayClient, "IoT Gateway Client", "Infrastructure Adapter", "Pushes access control changes")
+
+    Component(repository, "Device Repository", "Persistence Adapter", "Reads and writes device data to database")
+}
+
+Container(apiGateway, "API Gateway", "REST", "Single entry point")
+
+ContainerDb(coreDb, "Core Database", "PostgreSQL", "Users, devices, configurations")
+
+System_Ext(iotGateway, "IoT Gateway", "Handles device connectivity and authentication")
+
+
+Rel(apiGateway, api, "Routes registration and management requests")
+
+Rel(api, registration, "Registers new devices")
+Rel(api, lifecycle, "Updates device state")
+Rel(registration, repository, "Persists new device data")
+Rel(lifecycle, repository, "Persists lifecycle changes")
+Rel(eventListener, lifecycle, "Forwards lifecycle events")
+Rel(gatewayClient, iotGateway, "Provisions / revokes device access", "HTTPS / Events")
+Rel(lifecycle, gatewayClient, "Triggers access updates")
+Rel(iotGateway, eventListener, "Publishes lifecycle events", "Async events")
+Rel(repository, coreDb, "Reads/Writes")
+
+@enduml

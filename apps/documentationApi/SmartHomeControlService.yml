@@ -1,0 +1,113 @@
+openapi: 3.1.0
+info:
+  title: Smart Home Control Service API
+  description: REST API for executing and tracking smart home commands
+  version: 1.0.0
+
+tags:
+  - name: Commands
+    description: Smart home control commands
+
+paths:
+
+  /api/v1/commands:
+    post:
+      tags:
+        - Commands
+      summary: Send command to device
+      operationId: sendCommand
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              turnOnLight:
+                value:
+                  deviceId: "d9a1e4c3-12d1-4b33-a5f9-8b41c1f2c456"
+                  commandType: "TURN_ON"
+                  parameters:
+                    brightness: 80
+      responses:
+        "202":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandResponse'
+        "400":
+          description: Bad request
+        "404":
+          description: Not found
+        "500":
+          description: Internal server error
+
+  /api/v1/commands/{commandId}:
+    get:
+      tags:
+        - Commands
+      summary: Get command status
+      operationId: getCommandStatus
+      parameters:
+        - name: commandId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandStatusResponse'
+        "404":
+          description: Not found
+
+        "500":
+          description: Internal server error
+
+components:
+  schemas:
+
+    CommandRequest:
+      type: object
+      required:
+        - deviceId
+        - commandType
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+        commandType:
+          type: string
+          example: TURN_ON
+        parameters:
+          type: object
+          additionalProperties: true
+
+    CommandResponse:
+      type: object
+      properties:
+        commandId:
+          type: string
+          format: uuid
+
+    CommandStatusResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          example: EXECUTED
+        executedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        

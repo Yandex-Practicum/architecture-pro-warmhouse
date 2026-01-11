@@ -1,0 +1,44 @@
+@startuml
+title "Code Diagram – Command Application Service"
+
+class CommandApplicationService {
+    +Guid executeCommand(command: Command)
+    +void updateStatus(commandId: CommandId, status: CommandStatus)
+}
+
+
+interface CommandRepository {
+    +void Save(command: Command)
+    +Command FindById(Guid: CommandId)
+    +void Update(command: Command)
+}
+
+interface CommandPublisher {
+    +void Publish(command: Command)
+}
+
+class Command {
+    Guid Id
+    Guid DeviceId
+    CommandType Type
+    Dictionary Parameters
+    CommandStatus Status
+    Timestamp CreatedAt
+
+    +updateStatus(commandStatus: status): void
+}
+
+enum CommandStatus {
+    CREATED
+    SENT
+    EXECUTED
+    FAILED
+}
+
+CommandApplicationService --> CommandRepository : persists
+CommandApplicationService --> CommandPublisher : publishes
+CommandApplicationService --> Command : manages
+
+Command --> CommandStatus
+
+@enduml

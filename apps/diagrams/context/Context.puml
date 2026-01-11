@@ -1,0 +1,17 @@
+@startuml Context
+title "Context diagram - Home Heating system"
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(user, "User", "People that need to remotely control and monitor a system")
+System_Boundary(c1, "HeatingSystem", $link="https://github.com/plantuml-stdlib/C4-PlantUML") {
+    System(heatingSystem, "HeatingSystem", "Allows to remotely control the heating in your home.")
+}
+
+System_Ext(devices, "Smart Devices", "Heating controllers")
+
+
+Rel(user, heatingSystem, "Uses")
+Rel(heatingSystem, devices, "Uses")
+
+@enduml

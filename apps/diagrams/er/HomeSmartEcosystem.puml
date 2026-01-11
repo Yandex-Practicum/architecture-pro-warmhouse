@@ -1,0 +1,61 @@
+@startuml
+title "ER Diagram – Home Smart Ecosystem"
+
+entity User {
+    id : UUID
+    email : String
+    name : String
+    status : UserStatus
+    createdAt : Timestamp
+}
+
+entity Home {
+    id : UUID
+    name : String
+    location : String
+    createdAt : Timestamp
+}
+
+entity Device {
+    id : UUID
+    type_id: UUID
+    home_id: UUID
+    serial_number: string
+    status : DeviceStatus
+    vrsion : String
+    registeredAt : Timestamp
+}
+
+entity DeviceType {
+    +id : UUID
+    name : String
+}
+
+entity Command {
+    +id : UUID
+    type : CommandType
+    status : CommandStatus
+    parameters : JSON
+    createdAt : Timestamp
+    executedAt : Timestamp
+    finishedAt: Timestamp
+}
+
+entity TelemetryData {
+    +id : UUID
+    metric : String
+    value : Float
+    recordedAt : Timestamp
+}
+
+User ||--o{ Home
+User ||--o{ Command
+Home ||--o{ Device 
+
+Device ||--|{ Command
+Device ||--o{ TelemetryData
+
+Device }--|| DeviceType
+
+
+@enduml

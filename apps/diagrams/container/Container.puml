@@ -1,0 +1,51 @@
+@startuml
+title "Container Diagram - Home Smart Ecosystem (SaaS) "
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, "User", "Homeowner using the smart home SaaS platform")
+
+System_Boundary(system, "Home Smart Ecosystem (SaaS)") {
+
+    Container(webApp, "Client Application", "Web / Mobile", "Allows users to moniroing/control smart home devices")
+    Container(iam, "Identity & Access Management", "OAuth2 / OIDC", "Manages users, authentication, authorization, and tenants")
+    Container(apiGateway, "API Gateway", "REST", "Single entry point")
+
+    Container(deviceMgmt, "Device Management Service", "Microservice", "Registration, lifecycle management, partner device integration")
+    Container(telemetryService, "Telemetry & Monitoring Service", "Event-driven service", "Collects, stores, and provides access to telemetry and sensor data")
+    Container(controlService, "Smart Home Control Service", "Microservice", "Stores, executes commands for smart devices")
+    Container(iotGateway,"IoT Gateway / Message Broker", "MQTT / Event Bus","Сommunication layer between cloud and devices")
+    
+    ContainerDb(coreDb, "Core Database", "PostgreSQL", "Users, devices, configurations")
+    ContainerDb(commandsDb, "Commands Database", "PostgreSQL", "Stores status and commands's parameters")
+    ContainerDb(telemetryDb, "Telemetry Database", "Time-series DB", "Historical telemetry and sensor data")
+}
+
+System_Ext(devices, "Partner Smart Devices", "Smart devices using MQTT")
+
+Rel(user, webApp, "Uses", "HTTPS")
+Rel(webApp, apiGateway, "Calls", "HTTPS / WebSockets")
+
+Rel(apiGateway, iam, "Authenticates / authorizes", "OAuth2 / OIDC")
+Rel(apiGateway, deviceMgmt, "Routes requests to", "HTTPS")
+Rel(apiGateway, controlService, "Routes requests to", "HTTPS")
+Rel(apiGateway, telemetryService, "Routes requests to", "HTTPS")
+
+Rel(deviceMgmt, iotGateway, "Provisions device identity and access", "HTTP")
+Rel(deviceMgmt, coreDb, "Writes/Reads")
+
+Rel(controlService, coreDb, "Reads")
+Rel(controlService, commandsDb, "Writes/Reads")
+Rel(controlService, iotGateway, "Publishes control commands", "HTTP")
+
+Rel(telemetryService, telemetryDb, "Writes/Reads")
+
+Rel(iotGateway, deviceMgmt, "Publishes device lifecycle events", "Async events")
+Rel(iotGateway, devices, "Delivers control commands", "MQTT")
+Rel(iotGateway, telemetryService, "Forwards telemetry/events", "Event stream")
+
+Rel(devices, iotGateway, "Publishes telemetry and events", "MQTT")
+
+
+
+
+@enduml

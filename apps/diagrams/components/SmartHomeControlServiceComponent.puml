@@ -1,0 +1,40 @@
+@startuml
+title "Component Diagram – Smart Home Control Service"
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container_Boundary(controlService, "Smart Home Control Service") {
+
+    Component(api, "API Controller", "REST Controller", "Accepts smart home control commands from users")
+
+    Component(validator, "Validator", "Application Service", "Validates command type, device state")
+
+    Component(commandService, "Application Service", "Application Service", "Execution and updatind status of commands")
+
+    Component(gatewayClient, "IoT Gateway Client", "Infrastructure Adapter", "Publishes commands")
+
+    Component(statusListener, "Status Listener", "Event Consumer", "Consumes command execution results")
+
+    Component(repository, "Repository", "Persistence Adapter", "Stores commands and their status")
+}
+
+Container(apiGateway, "API Gateway", "REST", "Single entry point")
+
+ContainerDb(commandsDb, "Commands Database", "PostgreSQL", "Stores commands and statuses")
+
+System_Ext(iotGateway, "IoT Gateway / Message Broker", "MQTT / Event Bus", "Delivers commands to devices and emits execution events")
+
+Rel(apiGateway, api, "Routes control requests", "HTTPS")
+
+Rel(api, commandService, "Sends command")
+Rel(api, validator, "Validates command")
+Rel(commandService, repository, "Persists command")
+Rel(commandService, gatewayClient, "Publishes command")
+
+Rel(gatewayClient, iotGateway, "Sends control commands", "MQTT")
+
+Rel(iotGateway, statusListener, "Publishes command execution events", "Async events")
+Rel(statusListener, commandService, "Updates command status")
+
+Rel(repository, commandsDb, "Reads/Writes")
+
+@enduml

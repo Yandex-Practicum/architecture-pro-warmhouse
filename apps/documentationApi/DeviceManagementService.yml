@@ -1,0 +1,144 @@
+openapi: 3.1.0
+info:
+  title: Device Management Service API
+  description: REST API for device registration and lifecycle management
+  version: 1.0.0
+
+tags:
+  - name: Devices
+    description: Device registration and lifecycle operations
+
+paths:
+
+  /api/v1/devices:
+    post:
+      tags:
+        - Devices
+      summary: Register a new device
+      operationId: registerDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceRegistrationRequest'
+            examples:
+              registerDevice:
+                value:
+                  type: LIGHT
+                  homeId: e5ff3fb7-5b40-4c97-aaf0-6dc76e20e95d
+                  serialNumber: "SN-123456"
+      responses:
+        "201":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceRegistrationResponse'
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal server error
+
+  /api/v1/devices/{deviceId}:
+    get:
+      tags:
+        - Devices
+      summary: Get device information
+      operationId: getDevice
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        "404":
+          description: Device not found
+        "500":
+          description: Internal server error
+
+    patch:
+      tags:
+        - Devices
+      summary: Update device state
+      operationId: updateDeviceState
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceStateUpdateRequest'
+      responses:
+        "204":
+          description: No content
+        "404":
+          description: Device not found
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal server error
+
+components:
+  schemas:
+
+    DeviceRegistrationRequest:
+      type: object
+      required:
+        - serialNumber
+        - type
+        - homeId
+      properties:
+        serialNumber:
+          type: string
+        type:
+          type: string
+          example: LIGHT
+        homeId:
+          type: string
+          format: uuid
+
+    DeviceRegistrationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        status:
+          type: string
+          example: ACTIVE
+        registeredAt:
+          type: string
+          format: date-time
+
+    DeviceStateUpdateRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: DISABLED

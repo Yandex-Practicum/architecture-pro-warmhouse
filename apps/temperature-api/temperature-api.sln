@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35828.75 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "temperature-api", "temperature-api.csproj", "{3D1F752E-19D7-4334-80A6-62EB79B06118}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3D1F752E-19D7-4334-80A6-62EB79B06118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D1F752E-19D7-4334-80A6-62EB79B06118}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D1F752E-19D7-4334-80A6-62EB79B06118}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D1F752E-19D7-4334-80A6-62EB79B06118}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {09445BB8-FB5C-4C8C-90F6-37A3FF55E308}
+	EndGlobalSection
+EndGlobal
