@@ -1,0 +1,48 @@
+```puml
+@startuml source
+
+''' init layout
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+skinparam linetype ortho
+skinparam nodesep 150
+skinparam ranksep 100
+skinparam sequenceMessageAlign center
+
+<style>
+arrow {
+    FontName Arial
+    FontSize 12
+    FontStyle italic
+    FontColor black
+}
+</style>
+
+''' end init layout
+
+title
+    <b>Система управления отоплением</b>
+    <i> Исходная схема приложения - монолит</i>
+    <i> C1 - Containers </i>
+end title
+
+Person(admin, "Administrator", "Manage system")
+Person_Ext(user, "User", "User, who get sensor's data")
+
+System_Boundary(sourceSystem, "Main system") {
+    Container(server, "Server Instance", "golang", "One sensor -> one instance")
+    SystemDb(db, "System Storage", "Store settings and statistics for all sensors")
+    Rel_D(server, db, "Get or Update\nconcrete sensor data")
+}
+
+System_Ext(sensor, "Local temperature sensor", "Provides API with concrete sensor's data") 
+
+Rel(admin, server, "Manage system", "HTTP")
+Rel(user, server, "Manage sensors", "HTTP")
+Rel_R(server, sensor, "Get current\nvalue", "HTTP")
+
+@enduml
+```

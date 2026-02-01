@@ -1,0 +1,40 @@
+```puml
+@startuml source
+
+''' init layout
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+<style>
+arrow {
+    FontName Arial
+    FontSize 12
+    FontStyle italic
+    FontColor black
+}
+</style>
+
+''' end init layout
+
+title
+    <b>Система управления отоплением</b>
+    <i> Исходная схема приложения - монолит </i>
+    <i> C0 - Bounded context </i>
+end title
+
+Person_Ext(user, "User", "User, who get sensor's data")
+Person(admin, "Administrator", "Manage system")
+
+System(sourceSystem, "Warmhouse system", "Allow users get data from temperature's sensors")
+
+System_Ext(sensor, "Local temperature sensor", "Provides API with concrete sensor's data") 
+
+Rel(user, sourceSystem, "Manage sensors", "HTTP")
+Rel(admin, sourceSystem, "Manage sensors", "HTTP")
+Rel(sourceSystem, sensor, "Get current\nvalue", "HTTP")
+
+@enduml
+```

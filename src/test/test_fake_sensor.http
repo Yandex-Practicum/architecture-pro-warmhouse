@@ -1,0 +1,14 @@
+GEt http://localhost:8000/temperature?location=home
+
+###
+
+GEt http://localhost:8000/temperature/16
+
+###
+
+GEt http://localhost:8000/temperature?location
+
+###
+
+GEt http://localhost:8000/temperature/
+

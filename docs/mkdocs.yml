@@ -1,0 +1,8 @@
+site_name: architecture-pro-warmhouse
+theme: readthedocs
+markdown_extensions:
+  - md_in_html
+plugins:
+  - search
+  - plantuml:
+      puml_url: https://www.plantuml.com/plantuml/
