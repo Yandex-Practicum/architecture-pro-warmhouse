@@ -1,0 +1,40 @@
+openapi: 3.0.3
+info:
+  title: IoT API
+  version: 1.0.0
+  description: Документация для микросервисов экосистемы устройств
+servers:
+  - url: http://localhost:3000
+    description: Локальное тестирование
+paths:
+  /devices/{id}:
+    get:
+      summary: Получить информацию об устройстве
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 101
+        name:
+          type: string
+          example: "Датчик температуры"
+        status:
+          type: string
+          enum: [active, inactive]
+          example: "active"

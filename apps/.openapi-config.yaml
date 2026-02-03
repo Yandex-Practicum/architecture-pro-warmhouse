@@ -1,0 +1,6 @@
+styleguide:
+  rules:
+    operation-operationId: error
+    security-defined: error
+    operation-4xx-response: error
+    no-undefined-security-scheme: error
