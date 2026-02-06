@@ -1,0 +1,271 @@
+openapi: 3.0.3
+info:
+  title: Smart Home Platform API
+  description: REST API микросервисов экосистемы умного дома
+  version: 1.0.0
+
+servers:
+  - url: https://api.smart-home.local
+
+tags:
+  - name: Devices
+    description: Управление устройствами
+  - name: Telemetry
+    description: Телеметрия устройств
+  - name: Automations
+    description: Сценарии автоматизации
+  - name: Houses
+    description: Дома и доступы пользователей
+
+paths:
+
+  /api/v1/devices/{deviceId}:
+    get:
+      tags: [Devices]
+      summary: Получить информацию об устройстве
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Устройство найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Устройство не найдено
+
+    patch:
+      tags: [Devices]
+      summary: Обновить логическое состояние устройства
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceUpdateRequest'
+      responses:
+        '200':
+          description: Устройство обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Устройство не найдено
+
+  /api/v1/devices/{deviceId}/commands:
+    post:
+      tags: [Devices]
+      summary: Отправить команду устройству
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '202':
+          description: Команда поставлена в очередь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandResponse'
+        '404':
+          description: Устройство не найдено
+
+  /api/v1/telemetry:
+    get:
+      tags: [Telemetry]
+      summary: Получить телеметрию устройства
+      parameters:
+        - name: deviceId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Телеметрия получена
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TelemetryRecord'
+        '400':
+          description: Некорректный запрос
+
+  /api/v1/automations:
+    post:
+      tags: [Automations]
+      summary: Создать сценарий автоматизации
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationCreateRequest'
+      responses:
+        '201':
+          description: Сценарий создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Automation'
+
+    get:
+      tags: [Automations]
+      summary: Получить сценарии дома
+      parameters:
+        - name: houseId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список сценариев
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Automation'
+
+  /api/v1/houses:
+    get:
+      tags: [Houses]
+      summary: Получить дома пользователя
+      responses:
+        '200':
+          description: Список домов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/House'
+
+components:
+  schemas:
+
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        deviceType:
+          type: string
+          enum: [THERMOSTAT, LIGHT, CAMERA, GATE]
+        houseId:
+          type: string
+        status:
+          type: string
+          enum: [ONLINE, OFFLINE]
+        enabled:
+          type: boolean
+
+    DeviceUpdateRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+
+    CommandRequest:
+      type: object
+      properties:
+        command:
+          type: string
+        parameters:
+          type: object
+          additionalProperties: true
+
+    CommandResponse:
+      type: object
+      properties:
+        commandId:
+          type: string
+        status:
+          type: string
+          enum: [QUEUED]
+
+    TelemetryRecord:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        metric:
+          type: string
+        value:
+          type: number
+
+    AutomationCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        trigger:
+          type: object
+          properties:
+            type:
+              type: string
+            value:
+              type: string
+        action:
+          type: object
+          properties:
+            deviceId:
+              type: string
+            command:
+              type: string
+
+    Automation:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, DISABLED]
+
+    House:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string

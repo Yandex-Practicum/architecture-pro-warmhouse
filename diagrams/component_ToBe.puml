@@ -1,0 +1,35 @@
+@startuml
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+title Connectivity Service – C4 Component diagram
+
+Container_Boundary(hub, "Connectivity Service") {
+    Component(connectionApi, "Device Connection Endpoint", "MQTT/WebSocket Server", "Принимает подключения устройств, аутентифицирует, держит сессии")
+    Component(connectionManager, "Connection Manager", "Управление сессиями устройств, хранение состояния подключений")
+    Component(messageProcessor, "Message Processor", "Обработка входящих сообщений от устройств, публикация событий в шину")
+    Component(commandDispatcher, "Command Dispatcher", "Отправка команд устройствам через открытые сессии")
+}
+
+ContainerQueue(bus, "Message Broker", "События и команды")
+
+System_Ext(devices, "Устройства умного дома", "Датчики, Свет, ворота")
+
+System_Ext(provisioning, "Provisioning Service", "Подключение устройств")
+
+
+
+Rel(devices, connectionApi, "MQTT/WebSocket", "двунаправленно")
+Rel(connectionApi, connectionManager, "Обновление состояния подключений")
+Rel(provisioning, connectionManager, "Регистрация новых устройств и управление их подключениями")
+Rel(connectionManager, messageProcessor, "Передача сообщений от устройств")
+Rel(messageProcessor, bus, "Публикует события устройств и метрики")
+
+Rel(connectionApi, bus, "Обновляет состояние устройст")
+
+Rel(commandDispatcher, bus, "Читает команды устройствам из очереди")
+Rel(commandDispatcher, connectionManager, "Отправка команд устройствам")
+
+@enduml

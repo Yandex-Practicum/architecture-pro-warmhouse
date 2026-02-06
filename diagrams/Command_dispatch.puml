@@ -1,0 +1,39 @@
+@startuml
+title Code-level: Command dispatch + ACK (Connectivity Service)
+
+actor "Backend (via Broker)" as Backend
+queue "Message Broker" as Bus
+participant "CommandSubscriber" as Sub
+participant "CommandDispatcher" as Disp
+participant "ConnectionManager" as ConnMgr
+participant "DeviceSession" as Sess
+participant "MqttWsEndpoint" as Endpoint
+participant "AckTracker" as Ack
+participant "MessageProcessor" as Proc
+
+participant "Device" as Dev
+
+Backend -> Bus : publish CommandRequested(commandId, deviceId, payload)
+
+Bus -> Sub : CommandRequested
+Sub -> Disp : dispatch(CommandRequested)
+
+Disp -> ConnMgr : getSession(deviceId)
+alt session found (online)
+  ConnMgr --> Disp : DeviceSession
+  Disp -> Ack : register(commandId, deviceId, timeout)
+  Disp -> Sess : sendCommand(commandId, payload)
+  Sess -> Endpoint : publish to topic devices/{id}/commands
+  Endpoint -> Dev : MQTT/WSS message
+
+  Dev -> Endpoint : ACK(commandId, status, error?)
+  Endpoint -> Proc : onAck(rawAck)
+  Proc -> Ack : complete(commandId, status)
+  Ack --> Proc : ack result
+  Proc -> Bus : publish CommandAcked(commandId, status)
+else session not found (offline)
+  ConnMgr --> Disp : null
+  Disp -> Bus : publish CommandAcked(commandId, OFFLINE)
+end
+
+@enduml

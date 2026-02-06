@@ -1,0 +1,224 @@
+@startuml
+hide circle
+skinparam linetype ortho
+
+
+entity "User" as user {
+  * id : uuid <<PK>>
+  --
+  email : varchar
+  full_name : varchar
+  phone : varchar
+  status : varchar  ' active/blocked
+  created_at : timestamp
+}
+
+entity "Role" as role {
+  * id : uuid <<PK>>
+  --
+  code : varchar  ' owner/admin/guest/support
+  name : varchar
+}
+
+entity "HomeMember" as member {
+  * id : uuid <<PK>>
+  --
+  home_id : uuid <<FK>>
+  user_id : uuid <<FK>>
+  role_id : uuid <<FK>>
+  invited_by_user_id : uuid <<FK>>
+  status : varchar  ' invited/active/removed
+  created_at : timestamp
+}
+
+entity "Invitation" as invite {
+  * id : uuid <<PK>>
+  --
+  home_id : uuid <<FK>>
+  email : varchar
+  token : varchar
+  expires_at : timestamp
+  status : varchar  ' sent/accepted/expired
+}
+
+entity "Home" as home {
+  * id : uuid <<PK>>
+  --
+  name : varchar
+  address : varchar
+  region : varchar
+  timezone : varchar
+  created_at : timestamp
+}
+
+entity "Room" as room {
+  * id : uuid <<PK>>
+  --
+  home_id : uuid <<FK>>
+  name : varchar
+  floor : int
+}
+
+entity "DeviceType" as dtype {
+  * id : uuid <<PK>>
+  --
+  vendor : varchar
+  model : varchar
+  category : varchar   ' thermostat/switch/camera/sensor...
+  protocol : varchar   ' mqtt/matter/http/onvif/rtsp...
+}
+
+entity "Device" as dev {
+  * id : uuid <<PK>>
+  --
+  home_id : uuid <<FK>>
+  type_id : uuid <<FK>>
+  room_id : uuid <<FK>>
+  serial_number : varchar
+  display_name : varchar
+  status : varchar       ' online/offline/disabled
+  firmware_version : varchar
+  provisioned_at : timestamp
+  last_seen_at : timestamp
+}
+
+entity "ModuleKit" as kit {
+  * id : uuid <<PK>>
+  --
+  name : varchar
+  description : text
+  active : boolean
+}
+
+entity "ModuleKitItem" as kititem {
+  * id : uuid <<PK>>
+  --
+  kit_id : uuid <<FK>>
+  device_type_id : uuid <<FK>>
+  qty : int
+}
+
+entity "CapabilityType" as captype {
+  * id : uuid <<PK>>
+  --
+  code : varchar ' switch/thermostat/sensor.temperature/camera.stream...
+  schema_json : text
+}
+
+entity "DeviceCapability" as devcap {
+  * id : uuid <<PK>>
+  --
+  device_id : uuid <<FK>>
+  capability_type_id : uuid <<FK>>
+  endpoint : varchar  ' topic/port/channel
+  meta_json : text
+}
+
+entity "TelemetryData" as telem {
+  * id : uuid <<PK>>
+  --
+  device_id : uuid <<FK>>
+  capability_type_id : uuid <<FK>>
+  metric : varchar     ' temperature/humidity/motion/power...
+  value_num : double
+  value_text : varchar
+  unit : varchar
+  ts : timestamp
+}
+
+entity "DeviceState" as dstate {
+  * id : uuid <<PK>>
+  --
+  device_id : uuid <<FK>>
+  capability_type_id : uuid <<FK>>
+  state_json : text
+  updated_at : timestamp
+}
+
+entity "Command" as cmd {
+  * id : uuid <<PK>>
+  --
+  device_id : uuid <<FK>>
+  capability_type_id : uuid <<FK>>
+  issued_by_user_id : uuid <<FK>>
+  source : varchar     ' user/automation/support
+  idempotency_key : varchar
+  payload_json : text
+  status : varchar     ' accepted/sent/acked/failed/timeout
+  created_at : timestamp
+}
+
+entity "CommandAck" as ack {
+  * id : uuid <<PK>>
+  --
+  command_id : uuid <<FK>>
+  device_id : uuid <<FK>>
+  status : varchar     ' OK/ERROR/OFFLINE
+  error_code : varchar
+  received_at : timestamp
+}
+
+entity "AutomationRule" as rule {
+  * id : uuid <<PK>>
+  --
+  home_id : uuid <<FK>>
+  name : varchar
+  enabled : boolean
+  created_by_user_id : uuid <<FK>>
+  created_at : timestamp
+}
+
+entity "RuleTrigger" as trig {
+  * id : uuid <<PK>>
+  --
+  rule_id : uuid <<FK>>
+  type : varchar  ' schedule/event/threshold
+  config_json : text
+}
+
+entity "RuleAction" as act {
+  * id : uuid <<PK>>
+  --
+  rule_id : uuid <<FK>>
+  device_capability_id : uuid <<FK>>
+  action_type : varchar ' command
+  payload_json : text
+}
+
+user ||--o{ member : has
+home ||--o{ member : members
+role ||--o{ member : role
+
+home ||--o{ room : rooms
+room ||--o{ dev : devices_in_room
+home ||--o{ dev : devices
+
+dtype ||--o{ dev : type
+
+kit ||--o{ kititem : contains
+dtype ||--o{ kititem : in_kits
+
+dev ||--o{ devcap : capabilities
+captype ||--o{ devcap : defines
+
+dev ||--o{ telem : telemetry
+captype ||--o{ telem : metric_type
+
+dev ||--o{ dstate : current_state
+captype ||--o{ dstate : state_type
+
+dev ||--o{ cmd : commands
+user ||--o{ cmd : issued
+captype ||--o{ cmd : command_type
+
+cmd ||--o| ack : ack
+dev ||--o{ ack : device_acks
+
+home ||--o{ rule : rules
+rule ||--o{ trig : triggers
+rule ||--o{ act : actions
+devcap ||--o{ act : targets
+
+home ||--o{ invite : invitations
+
+@enduml

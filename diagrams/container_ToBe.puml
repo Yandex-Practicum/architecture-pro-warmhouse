@@ -1,0 +1,80 @@
+@startuml
+title WarmHouse Container Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+title Тёплый дом – C4 Container diagram
+
+Person(user, "Пользователь", "Житель дома, управляет устройствами")
+Person(admin, "Администратор/Оператор", "Сотрудник поддержки/эксплуатации. Диагностика, управление доступами, просмотр логов")
+
+System_Boundary(sys, "Экосистема Тёплый дом") {
+    Container(web, "Web / Mobile App", "Web, Mobile", "Интерфейс управления домом")
+    Container(adminPortal, "Admin Portal / Support Console", "Web", "UI оператора: поиск домов/устройств, журналы, диагностика, помощь пользователю")
+    Container(gateway, "API Gateway", "Единый гейтвей для всех клиентских приложений")
+    Container(auth, "Auth Service", "Пользователи, роли")
+    Container(home, "Home Service", "Дома, комнаты")
+    Container(registry, "Device Registry Service", "Реестр устройств и capability-модель")
+    Container(provisioning, "Provisioning Service", "Подключение устройств")
+    Container(command, "Command Service", "Приём и валидация команд")
+    Container(state, "Device State Service", "Последнее состояние устройств")
+    Container(telemetry, "Telemetry Service", "История телеметрии")
+    Container(automation, "Automation Service", "Сценарии и правила, можно програмировать реакции на события")
+    Container(connectivity, "Connectivity Service", "MQTT/WebSocket", "Соединения с устройствами")
+    ContainerQueue(bus, "Message Broker", "События и команды")
+    ContainerDb(db, "Database", "Хранение данных приложения")
+    ContainerDb(tsdb, "Time Series Database", "Хранение телеметрии")
+    Container(media, "Media Service", "Управление потоками с камер видеонаблюдения")
+    Container(streaming, "Media Gateway / Streaming Server", "WebRTC / HLS")
+    ContainerDb(bucket, "Object Storage", "Хранение записей видео")
+}
+
+System_Ext(devices, "Устройства умного дома", "Датчики, Свет, ворота")
+System_Ext(camers, "Камеры видеонаблюдения", "IP камеры с поддержкой RTSP/WebRTC")
+
+Rel(user, web, "Использует")
+Rel(admin, adminPortal, "Использует")
+Rel(web, gateway, "HTTP(S)")
+Rel(adminPortal, gateway, "HTTP(S)")
+
+Rel(gateway, auth, "HTTP")
+Rel(gateway, home, "HTTP")
+Rel(gateway, registry, "HTTP")
+Rel(gateway, command, "HTTP")
+Rel(gateway, state, "HTTP")
+Rel(gateway, telemetry, "HTTP")
+Rel(gateway, automation, "HTTP")
+Rel(gateway, provisioning, "HTTP")
+Rel(gateway, media, "HTTP")
+
+Rel(provisioning, registry, "HTTP")
+Rel(provisioning, connectivity, "HTTP")
+
+Rel(command, registry, "HTTP")
+
+Rel(command, bus, "Публикует CommandRequested")
+Rel(connectivity, bus, "Публикует события устройств")
+Rel(automation, bus, "Подписка на события изменения состояния и получения телеметрии, публикация CommandRequested")
+Rel(state, bus, "Подписка на события состояния устройств")
+Rel(telemetry, bus, "Подписка метрики устройств")
+
+Rel(state, db, "Чтение/Запись состояния устройств")
+Rel(automation, db, "Чтение/Запись сценариев и правил")
+Rel(auth, db, "Чтение/Запись пользователей и ролей")
+Rel(home, db, "Чтение/Запись домов и комнат")
+Rel(registry, db, "Чтение/Запись устройств и capability-модели")
+Rel(telemetry, tsdb, "Чтение телеметрии")
+Rel(telemetry, db, "Чтение метаданных телеметрии")
+Rel(media, db, "Чтение/Запись метаданных видео")
+
+Rel(streaming, camers, "RTSP/WebRTC", "двунаправленно")
+Rel(media, streaming, "Управление потоками", "HTTP")
+Rel(streaming, bucket, "Загрузка/Чтение записей видео")
+Rel(media, bucket, "Чтение записей видео")
+
+Rel(bus, tsdb, "Запись телеметрии")
+
+Rel(connectivity, devices, "MQTT / WebSocket", "двунаправленно")
+
+@enduml

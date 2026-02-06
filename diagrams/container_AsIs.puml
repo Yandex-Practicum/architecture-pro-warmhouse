@@ -1,0 +1,17 @@
+@startuml
+title warmhouse Context Diagram
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(user, "Клиент компании", "Пользователь")
+Person(worker, "Настройщик", "Работник настраивающий работу системы")
+
+System(smart_home, "Smart Home app", "Добавление/Удаление, настройка датчика. Обновление инфы о датчике (Status/Value).")
+
+System_Ext(temperature_api, "Temperature api", "Внешний сервис, который дает информацию температуре датчика по его ID/Location")
+
+Rel(user, smart_home, "Смотрит температуру", "")
+Rel(worker, smart_home, "Добавляет/Удаляет датчик", "")
+
+Rel(smart_home, temperature_api, "Получает текущую температуру на датчике", "HTTP API")
+@enduml
