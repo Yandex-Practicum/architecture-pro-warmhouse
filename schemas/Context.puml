@@ -1,0 +1,16 @@
+@startuml test
+title Контекстная диаграма монолита системы Умный дом
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(user, "Пользователь", "Пользователь системы умного дома")
+System(SmartHome, "Умный дом", "Управление датчиками умного дома. Добавить удалить датчики, получить изменить значения датчиков")
+
+System_Ext(api, "Внешние АПИ доступа к значениям датчиков", "Внешние АПИ доступа к значениям датчиков")
+
+Rel(user, SmartHome, "Пользователь использует систему Умный дом")
+Rel(SmartHome,api,"Доступ к данным датчиков. Чтение Изменение данных")
+
+@enduml
