@@ -1,0 +1,28 @@
+@startuml
+title Включение отопления – последовательность вызовов
+
+actor "Пользователь" as User
+participant "API Gateway" as Gateway
+participant "Heating Control" as Heating
+participant "User Service" as Users
+participant "Temperature Monitoring" as Monitoring
+participant "Device Registration" as DeviceReg
+participant "Message Broker" as Broker
+participant "Notification Service" as Notif
+
+User -> Gateway : POST /heatings/{id}/turn-on
+Gateway -> Users : Проверить права (JWT, роль)
+Users --> Gateway : OK (разрешено)
+Gateway -> Heating : POST /devices/{id}/commands (включить)
+Heating -> DeviceReg : GET /devices/{id} (получить данные об устройстве)
+DeviceReg --> Heating : информация об устройстве
+Heating -> Monitoring : GET /sensors/{id}/current (текущая температура)
+Monitoring --> Heating : 22°C
+Heating -> Heating : проверить, можно ли включить (например, не выше порога)
+Heating -> Heating : изменить состояние на "включено"
+Heating --> Gateway : 200 OK
+Heating -> Broker : publish(HeatingToggled, {deviceId, status:on})
+Broker -> Notif : событие
+Notif -> Notif : сформировать уведомление
+Notif --> User : email/push "Отопление включено"
+@enduml

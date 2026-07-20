@@ -1,0 +1,58 @@
+@startuml
+title Система "Умный дом" – микросервисная архитектура (контейнеры)
+
+actor "Пользователь" as User
+rectangle "Датчик температуры" as Sensor
+
+rectangle "API Gateway" as Gateway
+
+rectangle "Heating Control Service" as Heating
+rectangle "Temperature Monitoring Service" as Monitoring
+rectangle "Notification Service" as Notifications
+rectangle "User Service" as Users
+rectangle "Device Registration Service" as DeviceReg
+
+database "Heating DB" as HeatingDB
+database "Monitoring DB" as MonitoringDB
+database "Notification DB" as NotifDB
+database "User DB" as UserDB
+database "Device DB" as DeviceDB
+
+queue "Message Broker\n(RabbitMQ/Kafka)" as Broker
+
+' Внешние системы
+rectangle "Email Provider" as Email
+rectangle "Push Provider" as Push
+
+' Пользователь через Gateway
+User --> Gateway : "HTTPS (вкл/выкл, просмотр, регистрация)"
+
+' Gateway маршрутизирует запросы
+Gateway --> Heating : "REST (команды управления)"
+Gateway --> Monitoring : "REST (получение показаний)"
+Gateway --> Users : "REST (регистрация, аутентификация)"
+Gateway --> DeviceReg : "REST (регистрация устройств)"
+
+' Взаимодействия между сервисами (синхронные)
+Heating --> Monitoring : "GET /sensors/{id}/current (текущая температура)"
+Heating --> DeviceReg : "GET /devices/{id} (информация об устройстве)"
+Users --> Heating : "GET /users/{id}/permissions (проверка прав)"
+
+' Взаимодействие с датчиком (pull)
+Monitoring --> Sensor : "HTTP (опрос температуры)"
+
+' Связи с БД (каждый сервис – своя БД)
+Heating --> HeatingDB : "SQL"
+Monitoring --> MonitoringDB : "SQL"
+Notifications --> NotifDB : "SQL"
+Users --> UserDB : "SQL"
+DeviceReg --> DeviceDB : "SQL"
+
+' Асинхронные события через брокер
+Heating --> Broker : "publish: HeatingToggled, TemperatureSet"
+Monitoring --> Broker : "publish: TemperatureDrop, NewReading"
+Broker --> Notifications : "subscribe (события)"
+Notifications --> Email : "SMTP"
+Notifications --> Push : "Firebase/APNS"
+
+@enduml

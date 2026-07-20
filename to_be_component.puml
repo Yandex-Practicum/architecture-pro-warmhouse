@@ -1,0 +1,37 @@
+@startuml
+title Компоненты микросервиса "Heating Control"
+
+rectangle "Heating Control Service" {
+    rectangle "API Controller" as APICtrl
+    rectangle "Command Handler" as CmdHandler
+    rectangle "Device State Manager" as StateManager
+    rectangle "Event Publisher" as EventPub
+    rectangle "External Clients" as ExtClients
+}
+
+database "Heating DB" as DB
+
+' Внешние зависимости
+rectangle "Temperature Monitoring" as TempMon
+rectangle "Device Registration" as DevReg
+rectangle "Message Broker" as Broker
+
+' Пользовательский запрос через Gateway
+APICtrl --> CmdHandler : "обработать команду"
+CmdHandler --> StateManager : "изменить состояние"
+StateManager --> DB : "сохранить состояние"
+StateManager --> EventPub : "опубликовать событие"
+EventPub --> Broker : "publish"
+
+CmdHandler --> ExtClients : "вызов внешних сервисов"
+ExtClients --> TempMon : "запрос температуры"
+ExtClients --> DevReg : "получить данные об устройстве"
+
+note right of StateManager
+  Отвечает за бизнес-логику:
+  - включение/выключение
+  - установка температуры
+  - переключение режимов
+end note
+
+@enduml

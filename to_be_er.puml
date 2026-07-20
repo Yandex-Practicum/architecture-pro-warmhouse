@@ -1,0 +1,120 @@
+@startuml
+title Логическая ER-диаграмма системы "Умный дом" (микросервисная архитектура)
+
+' --- Сущности ---
+entity "User" as user {
+  * id : UUID <<PK>>
+  --
+  full_name : VARCHAR
+  email : VARCHAR
+  password_hash : VARCHAR
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "House" as house {
+  * id : UUID <<PK>>
+  --
+  name : VARCHAR
+  address : VARCHAR
+  created_at : TIMESTAMP
+}
+
+entity "UserHouse" as userhouse {
+  * user_id : UUID <<FK>>
+  * house_id : UUID <<FK>>
+  --
+  role : VARCHAR
+  joined_at : TIMESTAMP
+}
+
+entity "DeviceType" as devicetype {
+  * id : UUID <<PK>>
+  --
+  name : VARCHAR
+  description : TEXT
+}
+
+entity "Device" as device {
+  * id : UUID <<PK>>
+  --
+  type_id : UUID <<FK>>
+  house_id : UUID <<FK>>
+  serial_number : VARCHAR
+  firmware_version : VARCHAR
+  registered_at : TIMESTAMP
+  last_seen_at : TIMESTAMP
+}
+
+entity "Module" as module {
+  * id : UUID <<PK>>
+  --
+  device_id : UUID <<FK>>
+  name : VARCHAR
+  module_type : VARCHAR
+  parameters : JSON
+}
+
+entity "TelemetryData" as telemetry {
+  * id : UUID <<PK>>
+  --
+  device_id : UUID <<FK>>
+  timestamp : TIMESTAMP
+  value : DECIMAL
+  unit : VARCHAR
+}
+
+entity "HeatingMode" as heatingmode {
+  * id : UUID <<PK>>
+  --
+  name : VARCHAR
+  description : TEXT
+}
+
+entity "DeviceState" as devicestate {
+  * device_id : UUID <<PK>> <<FK>>
+  --
+  is_on : BOOLEAN
+  target_temperature : DECIMAL
+  current_mode_id : UUID <<FK>>
+  updated_at : TIMESTAMP
+}
+
+entity "NotificationSetting" as notifsetting {
+  * id : UUID <<PK>>
+  --
+  user_id : UUID <<FK>>
+  channel : VARCHAR
+  enabled : BOOLEAN
+  events : TEXT[]
+}
+
+entity "NotificationLog" as notiflog {
+  * id : UUID <<PK>>
+  --
+  user_id : UUID <<FK>>
+  type : VARCHAR
+  subject : VARCHAR
+  content : TEXT
+  sent_at : TIMESTAMP
+  status : VARCHAR
+}
+
+' --- Связи ---
+user ||--o{ userhouse : "имеет доступ"
+house ||--o{ userhouse : "содержит"
+
+house ||--o{ device : "расположено в"
+device }o--|| devicetype : "имеет тип"
+
+device ||--o{ module : "состоит из"
+
+device ||--o{ telemetry : "генерирует"
+
+device ||--|| devicestate : "имеет состояние"
+devicestate }o--|| heatingmode : "использует режим"
+
+user ||--o{ notifsetting : "настроено для"
+user ||--o{ notiflog : "получает"
+
+@enduml

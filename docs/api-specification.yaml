@@ -1,0 +1,283 @@
+openapi: 3.0.0
+info:
+  title: Smart Home Heating System API
+  version: 1.0.0
+  description: |
+    API для управления отоплением, мониторинга температуры и регистрации устройств.
+    Все эндпоинты (кроме /auth/login) требуют JWT в заголовке Authorization: Bearer <token>.
+servers:
+  - url: https://api.smarthome.com/v1
+paths:
+  /auth/login:
+    post:
+      summary: Аутентификация пользователя
+      description: Возвращает JWT токен для доступа к защищённым эндпоинтам.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+              required: [email, password]
+            example:
+              email: user@example.com
+              password: "SecurePass123"
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  token_type:
+                    type: string
+                    example: "Bearer"
+                  expires_in:
+                    type: integer
+                    example: 3600
+        '401':
+          description: Неверные учётные данные
+        '500':
+          description: Внутренняя ошибка сервера
+
+  /devices:
+    post:
+      summary: Регистрация нового устройства
+      description: Добавляет устройство в систему. Требуется роль "администратор" или "владелец".
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                serial_number:
+                  type: string
+                  example: "SN-12345-6789"
+                type_id:
+                  type: string
+                  format: uuid
+                  example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                house_id:
+                  type: string
+                  format: uuid
+                  example: "b2c3d4e5-f6a7-8901-bcde-f23456789012"
+                firmware_version:
+                  type: string
+                  example: "2.1.0"
+              required: [serial_number, type_id, house_id]
+      responses:
+        '201':
+          description: Устройство зарегистрировано
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    example: "c3d4e5f6-a7b8-9012-cdef-345678901234"
+                  serial_number:
+                    type: string
+                  registered_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Некорректные данные или серийный номер уже существует
+        '403':
+          description: Недостаточно прав
+        '500':
+          description: Ошибка сервера
+
+  /devices/{deviceId}/state:
+    get:
+      summary: Получение текущего состояния устройства
+      description: Возвращает включено/выключено, целевую температуру, текущий режим.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID устройства
+      responses:
+        '200':
+          description: Состояние устройства
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device_id:
+                    type: string
+                    format: uuid
+                  is_on:
+                    type: boolean
+                  target_temperature:
+                    type: number
+                    format: float
+                  current_mode:
+                    type: string
+                    enum: [economy, comfort, night]
+                  updated_at:
+                    type: string
+                    format: date-time
+              example:
+                device_id: "c3d4e5f6-a7b8-9012-cdef-345678901234"
+                is_on: true
+                target_temperature: 22.5
+                current_mode: "comfort"
+                updated_at: "2025-01-01T12:00:00Z"
+        '404':
+          description: Устройство не найдено
+        '401':
+          description: Неавторизован
+        '500':
+          description: Ошибка сервера
+
+  /devices/{deviceId}/commands:
+    post:
+      summary: Отправка команды устройству
+      description: Включить/выключить отопление или изменить целевую температуру.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+                  enum: [turn_on, turn_off, set_temperature]
+                  description: Тип команды
+                value:
+                  type: number
+                  format: float
+                  description: |
+                    Обязателен для команды set_temperature.
+                    Для turn_on/turn_off игнорируется.
+              required: [command]
+            examples:
+              turn_on:
+                summary: Включить отопление
+                value:
+                  command: "turn_on"
+              set_temp:
+                summary: Установить температуру 23°C
+                value:
+                  command: "set_temperature"
+                  value: 23.0
+      responses:
+        '200':
+          description: Команда принята и выполнена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                  updated_state:
+                    $ref: '#/components/schemas/DeviceState'
+        '400':
+          description: Некорректная команда или значение
+        '404':
+          description: Устройство не найдено
+        '403':
+          description: Недостаточно прав
+        '500':
+          description: Ошибка сервера
+
+  /devices/{deviceId}/telemetry/current:
+    get:
+      summary: Получение последнего показания температуры
+      description: Возвращает самое свежее значение температуры от датчика.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Текущее показание
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device_id:
+                    type: string
+                    format: uuid
+                  value:
+                    type: number
+                    format: float
+                  unit:
+                    type: string
+                    example: "°C"
+                  timestamp:
+                    type: string
+                    format: date-time
+              example:
+                device_id: "c3d4e5f6-a7b8-9012-cdef-345678901234"
+                value: 22.0
+                unit: "°C"
+                timestamp: "2025-01-01T12:05:00Z"
+        '404':
+          description: Устройство не найдено или нет данных
+        '401':
+          description: Неавторизован
+        '500':
+          description: Ошибка сервера
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    DeviceState:
+      type: object
+      properties:
+        is_on:
+          type: boolean
+        target_temperature:
+          type: number
+        current_mode:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
