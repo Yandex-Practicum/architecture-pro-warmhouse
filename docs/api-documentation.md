@@ -1,28 +1,32 @@
-# Smart Home Heating System – API Documentation
+# Smart Home Heating System — API Documentation
 
-**Версия:** 1.0.0  
-**Базовый URL:** `https://api.smarthome.com/v1`  
-**Формат данных:** JSON  
-**Аутентификация:** JWT (Bearer Token) – требуется для всех эндпоинтов, кроме `/auth/login`. Токен передаётся в заголовке `Authorization: Bearer <token>`.
+**Версия:** 1.0.0
+**Базовый URL:** `https://api.smarthome.com/v1`
+**Формат данных:** JSON
+**Аутентификация:** JWT (Bearer Token) — требуется для всех эндпоинтов, кроме `/auth/login`.
+
+> **Полная спецификация:** [api-specification.md](./api-specification.md)
+> **OpenAPI 3.0 (YAML):** [api-specification.yaml](./api-specification.yaml)
 
 ---
 
-## 1. REST API (синхронное взаимодействие)
+## Сводка эндпоинтов
 
-### 1.1. Аутентификация пользователя
+| # | Метод | Путь | Описание |
+|---|-------|------|----------|
+| 1 | `POST` | `/auth/login` | Аутентификация пользователя |
+| 2 | `POST` | `/devices` | Регистрация нового устройства |
+| 3 | `GET` | `/devices/{deviceId}/state` | Текущее состояние устройства |
+| 4 | `POST` | `/devices/{deviceId}/commands` | Отправка команды устройству |
+| 5 | `GET` | `/devices/{deviceId}/telemetry/current` | Последнее показание температуры |
 
-Позволяет получить JWT-токен для доступа к защищённым ресурсам.
+## Асинхронные события (AsyncAPI)
 
-| Параметр | Значение |
-|----------|----------|
-| **Метод** | `POST` |
-| **URL** | `/auth/login` |
-| **Описание** | Проверяет учётные данные пользователя и выдаёт токен доступа. |
+| Событие | Канал | Описание |
+|---------|-------|----------|
+| `HeatingToggled` | `heating.toggled` | Отопление включено/выключено |
+| `TemperatureSet` | `heating.temperature_set` | Целевая температура изменена |
+| `TemperatureDrop` | `temperature.drop` | Температура ниже порога |
+| `NewReading` | `temperature.new_reading` | Новое показание с датчика |
 
-**Тело запроса (JSON):**
-
-```json
-{
-  "email": "user@example.com",
-  "password": "SecurePass123"
-}
+Для полного описания контрактов, схем данных и примеров запросов/ответов см. [api-specification.md](./api-specification.md).

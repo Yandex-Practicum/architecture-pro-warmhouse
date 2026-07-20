@@ -16,15 +16,19 @@ import (
 
 // SensorHandler handles sensor-related requests
 type SensorHandler struct {
-	DB                 *db.DB
-	TemperatureService *services.TemperatureService
+	DB                   *db.DB
+	TemperatureService   *services.TemperatureService
+	DeviceServiceClient  *services.DeviceServiceClient
+	TelemetryServiceClient *services.TelemetryServiceClient
 }
 
 // NewSensorHandler creates a new SensorHandler
-func NewSensorHandler(db *db.DB, temperatureService *services.TemperatureService) *SensorHandler {
+func NewSensorHandler(db *db.DB, temperatureService *services.TemperatureService, deviceServiceClient *services.DeviceServiceClient, telemetryServiceClient *services.TelemetryServiceClient) *SensorHandler {
 	return &SensorHandler{
-		DB:                 db,
-		TemperatureService: temperatureService,
+		DB:                     db,
+		TemperatureService:     temperatureService,
+		DeviceServiceClient:    deviceServiceClient,
+		TelemetryServiceClient: telemetryServiceClient,
 	}
 }
 
@@ -142,6 +146,18 @@ func (h *SensorHandler) CreateSensor(c *gin.Context) {
 		return
 	}
 
+	// Register device in the device-service microservice
+	_, err = h.DeviceServiceClient.CreateDevice(services.DeviceRequest{
+		SensorID: sensor.ID,
+		Name:     sensor.Name,
+		Type:     string(sensor.Type),
+		Location: sensor.Location,
+		Unit:     sensor.Unit,
+	})
+	if err != nil {
+		log.Printf("Warning: failed to register device in device-service for sensor %d: %v", sensor.ID, err)
+	}
+
 	c.JSON(http.StatusCreated, sensor)
 }
 
@@ -165,6 +181,34 @@ func (h *SensorHandler) UpdateSensor(c *gin.Context) {
 		return
 	}
 
+	// Sync update to device-service microservice
+	updates := make(map[string]interface{})
+	if sensorUpdate.Name != "" {
+		updates["name"] = sensorUpdate.Name
+	}
+	if sensorUpdate.Type != "" {
+		updates["type"] = string(sensorUpdate.Type)
+	}
+	if sensorUpdate.Location != "" {
+		updates["location"] = sensorUpdate.Location
+	}
+	if sensorUpdate.Unit != "" {
+		updates["unit"] = sensorUpdate.Unit
+	}
+	if sensorUpdate.Status != "" {
+		updates["status"] = sensorUpdate.Status
+	}
+
+	if len(updates) > 0 {
+		device, err := h.DeviceServiceClient.GetDeviceBySensorID(id)
+		if err == nil && device != nil {
+			_, err = h.DeviceServiceClient.UpdateDevice(device.ID, updates)
+			if err != nil {
+				log.Printf("Warning: failed to update device in device-service for sensor %d: %v", id, err)
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, sensor)
 }
 
@@ -180,6 +224,15 @@ func (h *SensorHandler) DeleteSensor(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Delete device from device-service microservice
+	device, devErr := h.DeviceServiceClient.GetDeviceBySensorID(id)
+	if devErr == nil && device != nil {
+		delErr := h.DeviceServiceClient.DeleteDevice(device.ID)
+		if delErr != nil {
+			log.Printf("Warning: failed to delete device from device-service for sensor %d: %v", id, delErr)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Sensor deleted successfully"})
@@ -207,6 +260,21 @@ func (h *SensorHandler) UpdateSensorValue(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Get sensor details for telemetry push
+	sensor, err := h.DB.GetSensorByID(context.Background(), id)
+	if err == nil {
+		// Push reading to telemetry-service microservice
+		_, err = h.TelemetryServiceClient.PushReading(services.TelemetryReadingRequest{
+			SensorID: sensor.ID,
+			Value:    request.Value,
+			Unit:     sensor.Unit,
+			Location: sensor.Location,
+		})
+		if err != nil {
+			log.Printf("Warning: failed to push reading to telemetry-service for sensor %d: %v", sensor.ID, err)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Sensor value updated successfully"})
